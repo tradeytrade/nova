@@ -9,7 +9,7 @@
   <meta property="og:title" content="Nova · The coin you mine in one click" />
   <meta property="og:description" content="100 NOVA every 24 hours, up to one million. No presale, no creator allocation." />
   <meta property="og:image" content="logo.png" />
-  <link rel="icon" type="image/svg+xml" href="coin.svg" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="apple-touch-icon" href="logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -42,7 +42,10 @@
       <a href="#mine">Mine</a>
       <a href="#faq">FAQ</a>
     </nav>
-    <button id="connectBtn" class="btn btn-ink">Connect wallet</button>
+    <div class="nav-actions">
+      <a href="mine.html" class="btn btn-line btn-sm">Open miner</a>
+      <button id="connectBtn" class="btn btn-ink">Connect wallet</button>
+    </div>
   </header>
 
   <div id="configBanner" class="config-banner hidden" role="status">
@@ -165,13 +168,14 @@
         <div class="mine-copy">
           <h2>Mine your first NOVA</h2>
           <p class="mine-sub">Read live from the blockchain. Refreshes on its own every few seconds.</p>
+          <a href="mine.html" class="arrow-link">Open the full miner, with live activity <span aria-hidden="true">→</span></a>
 
           <div class="supply">
             <div class="supply-head">
               <span>Supply mined</span>
               <strong id="progressPct">0%</strong>
             </div>
-            <div class="supply-bar"><div id="progressBar" class="supply-fill"></div></div>
+            <div class="supply-bar"><div id="progressBar" class="supply-fill" data-progress></div></div>
             <p class="supply-foot"><span data-stat="supply">—</span> of <span data-stat="max">1,000,000</span> <span data-symbol>NOVA</span></p>
           </div>
 
@@ -193,11 +197,11 @@
           <button id="mineBtn" class="btn btn-mine" disabled>
             <span id="mineLabel">Connect your wallet</span>
           </button>
-          <p id="mineStatus" class="mine-status" aria-live="polite">You need MetaMask and a few cents of ETH on Base for gas.</p>
+          <p id="mineStatus" class="mine-status" aria-live="polite">You need MetaMask and a few cents of ETH on <span data-network>Base</span> for gas.</p>
 
           <div class="mine-links">
             <button id="addTokenBtn" class="text-link" type="button">Add <span data-symbol>NOVA</span> to MetaMask</button>
-            <a id="explorerLink" class="text-link" href="#" target="_blank" rel="noopener">View contract</a>
+            <a id="explorerLink" class="text-link" href="#" target="_blank" rel="noopener" data-contract-link>View contract</a>
           </div>
         </div>
       </div>
@@ -237,7 +241,7 @@
       <p class="outro-word" aria-hidden="true" data-name>Nova</p>
       <div class="outro-inner">
         <p class="outro-text">One click a day. All the way to a million.</p>
-        <a href="#mine" class="btn btn-lime">Start mining</a>
+        <a href="mine.html" class="btn btn-lime">Open the miner</a>
       </div>
     </section>
   </main>
@@ -245,7 +249,7 @@
   <footer class="footer">
     <a href="#home" class="brand brand-small"><img src="logo-mark.svg" alt="" width="26" height="18" /><span data-name>Nova</span></a>
     <p>Educational project on the Base network. No monetary value.</p>
-    <a id="footerContract" href="#" target="_blank" rel="noopener">Contract on the explorer</a>
+    <a id="footerContract" href="#" target="_blank" rel="noopener" data-contract-link>Contract on the explorer</a>
   </footer>
 
   <div id="toast" class="toast" role="status"></div>

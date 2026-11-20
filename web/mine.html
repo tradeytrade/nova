@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nova Miner</title>
+  <meta name="description" content="Mine 100 NOVA every 24 hours on the Base network." />
+  <meta name="theme-color" content="#0C2416" />
+  <meta property="og:title" content="Nova Miner" />
+  <meta property="og:description" content="Mine 100 NOVA every 24 hours, up to one million. No presale, no creator allocation." />
+  <meta property="og:image" content="logo.png" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-miner">
+
+  <!-- ===== HEADER ===== -->
+  <header class="nav nav-miner">
+    <a href="index.html" class="brand" aria-label="Nova, home">
+      <img src="logo-mark.svg" alt="" width="34" height="23" />
+      <span data-name>Nova</span>
+      <span class="brand-tag">Miner</span>
+    </a>
+    <div class="nav-actions">
+      <span class="net-pill"><span class="live-dot"></span><span data-network>Base</span></span>
+      <button id="connectBtn" class="btn btn-ink">Connect wallet</button>
+    </div>
+  </header>
+
+  <div id="configBanner" class="config-banner hidden" role="status">
+    Contract address missing: paste it into <code>CONTRACT_ADDRESS</code> in <code>app.js</code>.
+  </div>
+
+  <main class="miner">
+    <!-- ===== MINING STAGE ===== -->
+    <section class="stage" aria-label="Mine">
+      <div class="stage-coin">
+        <svg class="ring is-empty" viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="ring-track" cx="100" cy="100" r="96" />
+          <circle id="cooldownRing" class="ring-fill" cx="100" cy="100" r="96" pathLength="100" />
+        </svg>
+        <div class="coin3d" aria-hidden="true">
+          <div class="token-spin">
+            <div class="coin">
+              <img class="coin-face coin-front" src="coin.svg" alt="" />
+              <div class="coin-edge"></div>
+              <img class="coin-face coin-back" src="coin.svg" alt="" />
+            </div>
+          </div>
+        </div>
+        <div id="particles" class="particles"></div>
+      </div>
+
+      <p class="balance-label">Your balance</p>
+      <p class="balance"><span id="balance">—</span> <span class="balance-sym" data-symbol>NOVA</span></p>
+
+      <button id="mineBtn" class="btn btn-mine" disabled>
+        <span id="mineLabel">Connect your wallet</span>
+      </button>
+      <p id="mineStatus" class="mine-status" aria-live="polite">You need MetaMask and a few cents of ETH on <span data-network>Base</span> for gas.</p>
+
+      <div class="mine-links">
+        <button id="addTokenBtn" class="text-link" type="button">Add <span data-symbol>NOVA</span> to MetaMask</button>
+        <a class="text-link" href="#" target="_blank" rel="noopener" data-contract-link>View contract</a>
+      </div>
+    </section>
+
+    <!-- ===== SIDE PANELS ===== -->
+    <aside class="miner-side">
+      <section class="panel" aria-labelledby="supplyTitle">
+        <div class="panel-head">
+          <h2 id="supplyTitle" class="panel-title">Supply mined</h2>
+          <strong class="panel-big" data-stat="pct">0%</strong>
+        </div>
+        <div class="supply-bar"><div class="supply-fill" data-progress></div></div>
+        <p class="supply-foot"><span data-stat="supply">—</span> of <span data-stat="max">1,000,000</span> <span data-symbol>NOVA</span></p>
+        <dl class="panel-stats">
+          <div><dt>Mines</dt><dd data-stat="mines">—</dd></div>
+          <div><dt>Miners</dt><dd data-stat="miners">—</dd></div>
+          <div><dt>Left</dt><dd data-stat="remaining">—</dd></div>
+        </dl>
+      </section>
+
+      <section class="panel" aria-labelledby="walletTitle">
+        <h2 id="walletTitle" class="panel-title">Your wallet</h2>
+        <dl class="panel-rows">
+          <div><dt>Next mine</dt><dd id="nextMineText">—</dd></div>
+          <div><dt>Last mined</dt><dd id="lastMined">—</dd></div>
+          <div><dt>Reward per mine</dt><dd><span data-reward>100</span> <span data-symbol>NOVA</span></dd></div>
+        </dl>
+      </section>
+
+      <section class="panel" aria-labelledby="feedTitle">
+        <h2 id="feedTitle" class="panel-title">Recent mines</h2>
+        <ul id="feed" class="feed">
+          <li class="feed-empty">Loading…</li>
+        </ul>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="footer footer-miner">
+    <a href="index.html" class="text-link">← Back to home</a>
+    <p>Educational project on the <span data-network>Base</span> network. No monetary value.</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="app.js"></script>
+  <script src="mine.js"></script>
+</body>
+</html>

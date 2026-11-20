@@ -1,5 +1,5 @@
 /* =========================================================
-   Nova · Site logic
+   Nova · Site logic (shared by index.html and mine.html)
    You only need to edit the CONFIG block.
    ========================================================= */
 const CONFIG = {
@@ -11,6 +11,7 @@ const CONFIG = {
   CONTRACT_ADDRESS: "",
 
   // "baseSepolia" to test for free, "base" for the real network
+  // ("localhost" is only for development with a local node)
   NETWORK: "base",
 
   // Logo sent to MetaMask when the user clicks "Add to MetaMask"
@@ -30,18 +31,27 @@ const NETWORKS = {
     rpc: "https://sepolia.base.org",
     explorer: "https://sepolia.basescan.org",
   },
+  localhost: {
+    chainId: 31337,
+    name: "Localhost",
+    rpc: "http://127.0.0.1:8545",
+    explorer: "",
+  },
 };
 
-// Contract functions used by the site (ABI)
+// Contract functions and events used by the site (ABI)
 const ABI = [
   "function mine()",
   "function balanceOf(address) view returns (uint256)",
   "function totalSupply() view returns (uint256)",
   "function MAX_SUPPLY() view returns (uint256)",
   "function REWARD() view returns (uint256)",
+  "function COOLDOWN() view returns (uint256)",
   "function totalMiners() view returns (uint256)",
   "function totalMines() view returns (uint256)",
+  "function lastMine(address) view returns (uint256)",
   "function nextMineTime(address) view returns (uint256)",
+  "event Mined(address indexed miner, uint256 amount)",
 ];
 
 /* ---------- State ---------- */
@@ -50,13 +60,28 @@ const configured = /^0x[a-fA-F0-9]{40}$/.test(CONFIG.CONTRACT_ADDRESS);
 let readContract = null; // reads data without a wallet
 let signer = null;
 let account = null;
-let nextMine = 0; // timestamp (seconds) of the next allowed mine
+let nextMine = 0;        // timestamp (seconds) of the next allowed mine
+let lastMined = 0;       // timestamp (seconds) of this wallet's last mine
+let cooldown = 86400;    // seconds between mines (read from the contract)
 let busy = false;
 
+/* ---------- Helpers ---------- */
 const $ = (id) => document.getElementById(id);
+const setText = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+const on = (id, ev, fn) => $(id)?.addEventListener(ev, fn);
 const fmt = (n, d = 0) => Number(n).toLocaleString("en-US", { maximumFractionDigits: d });
 const units = (v) => Number(ethers.formatUnits(v, CONFIG.DECIMALS));
 const short = (a) => a.slice(0, 6) + "…" + a.slice(-4);
+const now = () => Math.floor(Date.now() / 1000);
+const link = (path) => (net.explorer ? `${net.explorer}/${path}` : "#");
+
+function timeAgo(sec) {
+  const s = Math.max(0, now() - sec);
+  if (s < 60) return "just now";
+  if (s < 3600) return Math.floor(s / 60) + " min ago";
+  if (s < 86400) return Math.floor(s / 3600) + " h ago";
+  return Math.floor(s / 86400) + " d ago";
+}
 
 /* ---------- Start ---------- */
 document.addEventListener("DOMContentLoaded", init);
@@ -65,15 +90,15 @@ function init() {
   // Fill in the name and symbol across the page
   document.querySelectorAll("[data-name]").forEach((el) => (el.textContent = CONFIG.NAME));
   document.querySelectorAll("[data-symbol]").forEach((el) => (el.textContent = CONFIG.SYMBOL));
-  $("networkName").textContent = net.name;
+  document.querySelectorAll("[data-network]").forEach((el) => (el.textContent = net.name));
+  setText("networkName", net.name);
 
-  const contractUrl = configured ? `${net.explorer}/address/${CONFIG.CONTRACT_ADDRESS}` : "#";
-  $("explorerLink").href = contractUrl;
-  $("footerContract").href = contractUrl;
+  const contractUrl = configured ? link(`address/${CONFIG.CONTRACT_ADDRESS}`) : "#";
+  document.querySelectorAll("[data-contract-link]").forEach((a) => (a.href = contractUrl));
 
-  $("connectBtn").addEventListener("click", connect);
-  $("mineBtn").addEventListener("click", mine);
-  $("addTokenBtn").addEventListener("click", addToWallet);
+  on("connectBtn", "click", connect);
+  on("mineBtn", "click", mine);
+  on("addTokenBtn", "click", addToWallet);
 
   if (typeof ethers === "undefined") {
     setStatus("Couldn’t load the ethers.js library. Check your internet connection.", "error");
@@ -81,8 +106,9 @@ function init() {
   }
 
   if (!configured) {
-    $("configBanner").classList.remove("hidden");
+    $("configBanner")?.classList.remove("hidden");
     setStatus("The contract isn’t configured yet.", "error");
+    setFeedEmpty("Recent mines will appear here once the contract is live.");
     return;
   }
 
@@ -90,7 +116,9 @@ function init() {
   readContract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, ABI, rpc);
 
   refreshStats();
+  refreshFeed();
   setInterval(refreshStats, 15000);
+  setInterval(refreshFeed, 30000);
   setInterval(tick, 1000);
 
   // If the wallet was already connected before, reconnect without prompting
@@ -118,11 +146,16 @@ async function connect() {
     account = await signer.getAddress();
 
     const btn = $("connectBtn");
-    btn.textContent = short(account);
-    btn.setAttribute("aria-label", "Wallet connected: " + account);
-    btn.classList.add("connected");
+    if (btn) {
+      btn.textContent = short(account);
+      btn.setAttribute("aria-label", "Wallet connected: " + account);
+      btn.classList.add("connected");
+    }
+    document.body.classList.add("is-connected");
+    setStatus("Ready. Each wallet can mine once every 24 hours.");
 
     await refreshUser();
+    refreshFeed();
   } catch (err) {
     console.error(err);
     setStatus(niceError(err), "error");
@@ -145,7 +178,7 @@ async function ensureNetwork() {
           chainName: net.name,
           nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
           rpcUrls: [net.rpc],
-          blockExplorerUrls: [net.explorer],
+          blockExplorerUrls: net.explorer ? [net.explorer] : [],
         }],
       });
     } else {
@@ -161,20 +194,21 @@ async function mine() {
   const btn = $("mineBtn");
   btn.disabled = true;
   btn.classList.add("working");
-  $("mineLabel").textContent = "Confirm in MetaMask…";
+  setText("mineLabel", "Confirm in MetaMask…");
   setStatus("Check the MetaMask window and confirm the transaction.");
 
   try {
     const contract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, ABI, signer);
     const tx = await contract.mine();
-    $("mineLabel").textContent = "Mining…";
-    setStatus(`Transaction sent. Waiting for confirmation… <a href="${net.explorer}/tx/${tx.hash}" target="_blank" rel="noopener">view</a>`);
+    setText("mineLabel", "Mining…");
+    const view = net.explorer ? ` <a href="${link("tx/" + tx.hash)}" target="_blank" rel="noopener">view</a>` : "";
+    setStatus(`Transaction sent. Waiting for confirmation…${view}`);
     await tx.wait();
 
     celebrate();
     setStatus(`You mined ${fmt(units(await readContract.REWARD()))} ${CONFIG.SYMBOL}! Come back in 24 h.`, "ok");
     toast("⛏️ Mined successfully!");
-    await Promise.all([refreshUser(), refreshStats()]);
+    await Promise.all([refreshUser(), refreshStats(), refreshFeed()]);
   } catch (err) {
     console.error(err);
     setStatus(niceError(err), "error");
@@ -217,23 +251,26 @@ function setStat(name, value) {
 
 async function refreshStats() {
   try {
-    const [supply, max, miners, mines, reward] = await Promise.all([
+    const [supply, max, miners, mines, reward, cd] = await Promise.all([
       readContract.totalSupply(),
       readContract.MAX_SUPPLY(),
       readContract.totalMiners(),
       readContract.totalMines(),
       readContract.REWARD(),
+      readContract.COOLDOWN(),
     ]);
     const s = units(supply), m = units(max);
     const pct = m ? (s / m) * 100 : 0;
+    cooldown = Number(cd) || cooldown;
 
     setStat("supply", fmt(s));
     setStat("max", fmt(m));
     setStat("remaining", fmt(m - s));
     setStat("miners", fmt(miners));
     setStat("mines", fmt(mines));
-    $("progressPct").textContent = fmt(pct, pct < 1 ? 3 : 1) + "%";
-    $("progressBar").style.width = Math.max(pct, 0.5) + "%";
+    setStat("pct", fmt(pct, pct < 1 ? 3 : 1) + "%");
+    setText("progressPct", fmt(pct, pct < 1 ? 3 : 1) + "%");
+    document.querySelectorAll("[data-progress]").forEach((el) => (el.style.width = Math.max(pct, 0.5) + "%"));
     document.querySelectorAll("[data-reward]").forEach((el) => (el.textContent = fmt(units(reward))));
 
     if (s >= m) {
@@ -247,41 +284,103 @@ async function refreshStats() {
 
 async function refreshUser() {
   if (!account) return;
-  const [bal, next] = await Promise.all([
+  const [bal, next, last] = await Promise.all([
     readContract.balanceOf(account),
     readContract.nextMineTime(account),
+    readContract.lastMine(account),
   ]);
-  $("balance").textContent = fmt(units(bal), 2);
+  setText("balance", fmt(units(bal), 2));
+  lastMined = Number(last);
+  setText("lastMined", lastMined ? timeAgo(lastMined) : "Never");
   if (nextMine !== Infinity) nextMine = Number(next);
   updateMineButton();
 }
 
-/* ---------- Button and countdown ---------- */
+/* ---------- Recent mines (mine.html) ---------- */
+function setFeedEmpty(msg) {
+  const feed = $("feed");
+  if (feed) feed.innerHTML = `<li class="feed-empty">${msg}</li>`;
+}
+
+async function refreshFeed() {
+  const feed = $("feed");
+  if (!feed || !readContract) return;
+  try {
+    const provider = readContract.runner;
+    const latest = await provider.getBlockNumber();
+    let events = [];
+    // Public RPCs limit how many blocks one query can cover, so try a wide range first
+    for (const range of [9000, 2000]) {
+      try {
+        events = await readContract.queryFilter(readContract.filters.Mined(), Math.max(0, latest - range), latest);
+        break;
+      } catch (_) { /* try a smaller range */ }
+    }
+    const recent = events.slice(-6).reverse();
+    if (!recent.length) return setFeedEmpty("No mines in the last few hours. Be the first!");
+
+    const blocks = await Promise.all(recent.map((e) => provider.getBlock(e.blockNumber)));
+    feed.innerHTML = recent.map((e, i) => {
+      const who = e.args.miner;
+      const you = account && who.toLowerCase() === account.toLowerCase();
+      const href = link("tx/" + e.transactionHash);
+      return `<li${you ? ' class="is-you"' : ""}>
+        <a href="${href}" target="_blank" rel="noopener">
+          <span class="feed-dot" aria-hidden="true"></span>
+          <span class="feed-who">${you ? "You" : short(who)}</span>
+          <span class="feed-amt">+${fmt(units(e.args.amount))} ${CONFIG.SYMBOL}</span>
+          <time class="feed-time">${blocks[i] ? timeAgo(blocks[i].timestamp) : ""}</time>
+        </a></li>`;
+    }).join("");
+  } catch (err) {
+    console.error("Error reading recent mines", err);
+    setFeedEmpty("Couldn’t load recent mines right now.");
+  }
+}
+
+/* ---------- Button, countdown and cooldown ring ---------- */
 function tick() {
   if (account && !busy) updateMineButton();
 }
 
+function setRing(fraction) {
+  const ring = $("cooldownRing");
+  if (!ring) return;
+  ring.style.strokeDashoffset = String(100 - Math.max(0, Math.min(1, fraction)) * 100);
+  ring.closest(".ring")?.classList.toggle("is-ready", fraction >= 1);
+  ring.closest(".ring")?.classList.toggle("is-empty", fraction <= 0.001);
+}
+
 function updateMineButton() {
-  const btn = $("mineBtn"), label = $("mineLabel");
-  if (busy) return;
+  const btn = $("mineBtn");
+  if (busy || !btn) return;
   if (!account) {
     btn.disabled = true;
-    label.textContent = "Connect your wallet";
+    setText("mineLabel", "Connect your wallet");
+    setText("nextMineText", "—");
+    setRing(0);
     return;
   }
   if (nextMine === Infinity) {
     btn.disabled = true;
-    label.textContent = "Supply exhausted";
+    setText("mineLabel", "Supply exhausted");
+    setText("nextMineText", "Never: all mined");
+    setRing(0);
     return;
   }
-  const left = nextMine - Math.floor(Date.now() / 1000);
+  const left = nextMine - now();
   if (left > 0) {
     btn.disabled = true;
-    label.textContent = "Next mine in " + countdown(left);
+    setText("mineLabel", "Next mine in " + countdown(left));
+    setText("nextMineText", countdown(left));
+    setRing(1 - left / cooldown);
   } else {
     btn.disabled = false;
-    label.textContent = "Mine";
+    setText("mineLabel", "Mine");
+    setText("nextMineText", "Ready now");
+    setRing(1);
   }
+  if (lastMined) setText("lastMined", timeAgo(lastMined));
 }
 
 function countdown(sec) {
@@ -291,11 +390,12 @@ function countdown(sec) {
 
 /* ---------- Effects ---------- */
 function celebrate() {
-  // 3D coin spin (defined in motion.js)
+  // 3D coin spin (defined in motion.js / mine.js)
   if (typeof window.novaCelebrate === "function") window.novaCelebrate();
 
   const box = $("particles");
-  const reward = document.querySelector("[data-reward]").textContent;
+  if (!box) return;
+  const reward = document.querySelector("[data-reward]")?.textContent || "100";
   for (let i = 0; i < 7; i++) {
     const p = document.createElement("span");
     p.className = "particle";
@@ -310,6 +410,7 @@ function celebrate() {
 
 function setStatus(html, type = "") {
   const el = $("mineStatus");
+  if (!el) return;
   el.innerHTML = html;
   el.className = "mine-status " + type;
 }
@@ -317,6 +418,7 @@ function setStatus(html, type = "") {
 let toastTimer;
 function toast(msg) {
   const t = $("toast");
+  if (!t) return;
   t.textContent = msg;
   t.classList.add("show");
   clearTimeout(toastTimer);

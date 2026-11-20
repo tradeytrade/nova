@@ -7,12 +7,15 @@ nova/
 ├── contracts/
 │   └── Nova.sol        ← smart contract (Solidity)
 ├── web/
-│   ├── index.html      ← the page
-│   ├── style.css       ← design (colours in :root)
+│   ├── index.html      ← landing page (with a mining section)
+│   ├── mine.html       ← dedicated miner page
+│   ├── style.css       ← design for both pages (colours in :root)
 │   ├── app.js          ← MetaMask + contract connection (CONFIG at the top)
-│   ├── motion.js       ← animations: 3D coin, parallax and smooth scrolling
+│   ├── motion.js       ← landing animations: 3D coin, parallax, smooth scroll
+│   ├── mine.js         ← miner page coin animation
 │   ├── logo-mark.svg   ← the logo (the N) as a vector
-│   ├── coin.svg        ← the coin face (also used as the favicon)
+│   ├── coin.svg        ← the coin face (full detail)
+│   ├── icon.svg        ← simplified coin for small sizes (favicon)
 │   ├── logo.png        ← 256×256 icon (MetaMask and logoURI)
 │   ├── logo-32.png     ← 32×32 icon (Basescan token form)
 │   └── favicon.png     ← fallback browser tab icon
@@ -27,6 +30,7 @@ nova/
 - **Parallax:** rock strata in the hero that move at different speeds, and a giant word in the outro that slides.
 - **Scroll animations:** the manifesto text lights up word by word.
 - **Smooth scrolling** with Lenis, and an animated hero entrance.
+- **A dedicated miner page** (`mine.html`): a large 3D coin inside a ring that fills up during your 24 h cooldown, your balance, next/last mine, live supply stats and a feed of recent mines read from the contract's `Mined` events.
 - If the system has **"reduce motion"** turned on, or the libraries fail to load, the site stays static (a fixed coin in each section) and everything keeps working.
 
 Libraries (loaded from a CDN, pinned to exact versions, nothing to install): ethers.js 6.13.4, GSAP 3.12.5 + ScrollTrigger, and Lenis 1.1.13.
@@ -35,8 +39,10 @@ To preview locally:
 ```bash
 cd web
 python -m http.server 8000
-# open http://localhost:8000
+# open http://localhost:8000  (miner: http://localhost:8000/mine.html)
 ```
+
+The coin artwork lives in `coin.svg` and `icon.svg`. If you edit them, re-export `logo.png` (256 px), `logo-32.png` (32 px, from `icon.svg`) and `favicon.png` (64 px, from `icon.svg`) with any SVG-to-PNG tool.
 
 ---
 
