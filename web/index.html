@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nova · The coin you mine in one click</title>
+  <meta name="description" content="Nova is a coin on the Base network that anyone can mine for free from the web, once every 24 hours." />
+  <meta name="theme-color" content="#F1F2EE" />
+  <meta property="og:title" content="Nova · The coin you mine in one click" />
+  <meta property="og:description" content="100 NOVA every 24 hours, up to one million. No presale, no creator allocation." />
+  <meta property="og:image" content="logo.png" />
+  <link rel="icon" type="image/svg+xml" href="coin.svg" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- The 3D coin that travels down the page as you scroll -->
+  <div id="token" class="token" aria-hidden="true">
+    <div class="token-spin">
+      <div class="coin">
+        <img class="coin-face coin-front" src="coin.svg" alt="" />
+        <div class="coin-edge"></div>
+        <img class="coin-face coin-back" src="coin.svg" alt="" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HEADER ===== -->
+  <header class="nav" id="nav">
+    <a href="#home" class="brand" aria-label="Nova, home">
+      <img src="logo-mark.svg" alt="" width="34" height="23" />
+      <span data-name>Nova</span>
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#how-it-works">How it works</a>
+      <a href="#rules">Rules</a>
+      <a href="#mine">Mine</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <button id="connectBtn" class="btn btn-ink">Connect wallet</button>
+  </header>
+
+  <div id="configBanner" class="config-banner hidden" role="status">
+    Contract address missing: paste it into <code>CONTRACT_ADDRESS</code> in <code>app.js</code>.
+  </div>
+
+  <main>
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="home">
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <p class="hero-net"><span class="live-dot"></span>Live on <span id="networkName">Base</span></p>
+          <h1 class="hero-title">
+            <span class="line"><span>The coin</span></span>
+            <span class="line"><span>you mine</span></span>
+            <span class="line"><span>in one click.</span></span>
+          </h1>
+          <p class="hero-lead">
+            Connect your wallet, hit Mine and get <span data-reward>100</span> <span data-symbol>NOVA</span>.
+            Every wallet can mine again every 24 hours, until the million coins run out.
+          </p>
+          <div class="hero-actions">
+            <a href="#mine" class="btn btn-lime">Start mining</a>
+            <a href="#how-it-works" class="btn btn-line">See how it works</a>
+          </div>
+        </div>
+        <div class="token-anchor anchor-hero" data-anchor="hero"></div>
+      </div>
+
+      <div class="hero-live" aria-label="Live data">
+        <p><strong data-stat="supply">—</strong> <span data-symbol>NOVA</span> mined</p>
+        <p><strong data-stat="miners">—</strong> miners</p>
+        <p><strong data-stat="remaining">—</strong> left to mine</p>
+      </div>
+
+      <!-- Rock strata (parallax) -->
+      <div class="strata" aria-hidden="true">
+        <svg class="stratum s1" viewBox="0 0 1440 220" preserveAspectRatio="none"><path d="M0 120 C180 80 300 150 480 118 C660 86 760 40 960 70 C1150 98 1280 150 1440 104 L1440 220 L0 220 Z"/></svg>
+        <svg class="stratum s2" viewBox="0 0 1440 220" preserveAspectRatio="none"><path d="M0 150 C220 120 360 180 560 150 C760 120 900 96 1080 128 C1240 156 1340 132 1440 140 L1440 220 L0 220 Z"/></svg>
+        <svg class="stratum s3" viewBox="0 0 1440 220" preserveAspectRatio="none"><path d="M0 182 C200 160 420 200 640 178 C860 156 1020 170 1200 186 C1320 196 1390 180 1440 176 L1440 220 L0 220 Z"/></svg>
+      </div>
+    </section>
+
+    <!-- ===== MANIFESTO ===== -->
+    <section class="manifesto" id="manifesto">
+      <div class="manifesto-inner">
+        <div class="token-anchor anchor-manifesto" data-anchor="manifesto"></div>
+        <p class="manifesto-text" data-fill>
+          No server farms. No graphics cards. No presale and no coins set aside for the creator.
+          Just a public contract that gives 100 NOVA to anyone who asks, once a day, until it reaches one million.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== RULES ===== -->
+    <section class="rules" id="rules">
+      <div class="rules-inner">
+        <div class="rules-side">
+          <h2>Rules nobody can change</h2>
+          <p class="rules-sub">They are written into the contract. Not even its creator can touch them, and anyone can read the code on the block explorer.</p>
+          <div class="token-anchor anchor-rules" data-anchor="rules"></div>
+        </div>
+        <ul class="rules-list">
+          <li>
+            <h3>One million. Not one more.</h3>
+            <p>The contract can never create more than 1,000,000 NOVA. Once they are all mined, mining closes forever.</p>
+          </li>
+          <li>
+            <h3><span data-reward>100</span> NOVA per mine</h3>
+            <p>Every time you mine, the coins go straight to your wallet. No middlemen.</p>
+          </li>
+          <li>
+            <h3>Once every 24 hours</h3>
+            <p>The contract remembers when you last mined and rejects any attempt before your time is up.</p>
+          </li>
+          <li>
+            <h3>The creator starts at zero</h3>
+            <p>No reserved coins. Whoever launched Nova has to mine just like everyone else.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== HOW IT WORKS ===== -->
+    <section class="how" id="how-it-works">
+      <div class="how-inner">
+        <div class="how-copy">
+          <h2>Three steps, zero hardware</h2>
+          <ol class="steps">
+            <li>
+              <span class="step-n">1</span>
+              <div>
+                <h3>Connect your wallet</h3>
+                <p>Click “Connect wallet” and approve in MetaMask. The site switches you to the Base network automatically.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-n">2</span>
+              <div>
+                <h3>Hit Mine</h3>
+                <p>Confirm the transaction. You pay a few cents in gas and get <span data-reward>100</span> NOVA right away.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-n">3</span>
+              <div>
+                <h3>Come back tomorrow</h3>
+                <p>A countdown tells you when you can mine again.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <div class="token-anchor anchor-how" data-anchor="how"></div>
+      </div>
+    </section>
+
+    <!-- ===== MINE ===== -->
+    <section class="mine" id="mine">
+      <div class="mine-inner">
+        <div class="mine-copy">
+          <h2>Mine your first NOVA</h2>
+          <p class="mine-sub">Read live from the blockchain. Refreshes on its own every few seconds.</p>
+
+          <div class="supply">
+            <div class="supply-head">
+              <span>Supply mined</span>
+              <strong id="progressPct">0%</strong>
+            </div>
+            <div class="supply-bar"><div id="progressBar" class="supply-fill"></div></div>
+            <p class="supply-foot"><span data-stat="supply">—</span> of <span data-stat="max">1,000,000</span> <span data-symbol>NOVA</span></p>
+          </div>
+
+          <dl class="mine-stats">
+            <div><dt>Mines</dt><dd data-stat="mines">—</dd></div>
+            <div><dt>Miners</dt><dd data-stat="miners">—</dd></div>
+            <div><dt>Left to mine</dt><dd data-stat="remaining">—</dd></div>
+          </dl>
+        </div>
+
+        <div class="mine-card">
+          <div class="token-anchor anchor-mine" data-anchor="mine">
+            <div id="particles" class="particles"></div>
+          </div>
+
+          <p class="balance-label">Your balance</p>
+          <p class="balance"><span id="balance">—</span> <span class="balance-sym" data-symbol>NOVA</span></p>
+
+          <button id="mineBtn" class="btn btn-mine" disabled>
+            <span id="mineLabel">Connect your wallet</span>
+          </button>
+          <p id="mineStatus" class="mine-status" aria-live="polite">You need MetaMask and a few cents of ETH on Base for gas.</p>
+
+          <div class="mine-links">
+            <button id="addTokenBtn" class="text-link" type="button">Add <span data-symbol>NOVA</span> to MetaMask</button>
+            <a id="explorerLink" class="text-link" href="#" target="_blank" rel="noopener">View contract</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section class="faq" id="faq">
+      <div class="faq-inner">
+        <h2>FAQ</h2>
+        <div class="faq-list">
+          <details>
+            <summary>Does mining cost money?</summary>
+            <p>The coin is free, but every transaction on Base pays a small network fee (gas) in ETH. It is usually a few cents.</p>
+          </details>
+          <details>
+            <summary>Is this mining like Bitcoin?</summary>
+            <p>Not quite. In Bitcoin, computers compete to solve calculations. Here, mining is a contract rule that creates new coins for whoever asks, with a limit per wallet per day. What they share is a limited supply that is handed out little by little.</p>
+          </details>
+          <details>
+            <summary>Why Base?</summary>
+            <p>Base is a layer-2 network built on Ethereum. It inherits Ethereum’s security, but fees are much lower, so one transaction a day makes sense.</p>
+          </details>
+          <details>
+            <summary>Is it worth anything? Can I buy it?</summary>
+            <p>No. It is an educational project: it is not sold and is not listed on any exchange. It exists to learn how tokens and smart contracts work.</p>
+          </details>
+          <details>
+            <summary>I can’t see my coins in MetaMask</summary>
+            <p>Click “Add NOVA to MetaMask” in the mining panel. The coin will show up in your wallet with its logo.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== OUTRO ===== -->
+    <section class="outro">
+      <p class="outro-word" aria-hidden="true" data-name>Nova</p>
+      <div class="outro-inner">
+        <p class="outro-text">One click a day. All the way to a million.</p>
+        <a href="#mine" class="btn btn-lime">Start mining</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <a href="#home" class="brand brand-small"><img src="logo-mark.svg" alt="" width="26" height="18" /><span data-name>Nova</span></a>
+    <p>Educational project on the Base network. No monetary value.</p>
+    <a id="footerContract" href="#" target="_blank" rel="noopener">Contract on the explorer</a>
+  </footer>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script src="app.js"></script>
+  <script src="motion.js"></script>
+</body>
+</html>
