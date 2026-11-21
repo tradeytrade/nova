@@ -10,9 +10,11 @@ nova/
 │   ├── index.html      ← landing page (with a mining section)
 │   ├── mine.html       ← dedicated miner page
 │   ├── style.css       ← design for both pages (colours in :root)
+│   ├── i18n.js         ← all texts in English, Spanish and French
 │   ├── app.js          ← MetaMask + contract connection (CONFIG at the top)
-│   ├── motion.js       ← landing animations: 3D coin, parallax, smooth scroll
-│   ├── mine.js         ← miner page coin animation
+│   ├── motion.js       ← landing animations: flying coin, parallax, reveals
+│   ├── fx.js           ← shared effects: interactive coin, magnetic buttons
+│   ├── mine.js         ← miner page entrance animation
 │   ├── logo-mark.svg   ← the logo (the N) as a vector
 │   ├── coin.svg        ← the coin face (full detail)
 │   ├── icon.svg        ← simplified coin for small sizes (favicon)
@@ -30,6 +32,9 @@ nova/
 - **Parallax:** rock strata in the hero that move at different speeds, and a giant word in the outro that slides.
 - **Scroll animations:** the manifesto text lights up word by word.
 - **Smooth scrolling** with Lenis, and an animated hero entrance.
+- **Three languages:** English, Spanish and French, from the menu in the header. The choice is remembered, the browser's language is used the first time, and `?lang=es` / `?lang=fr` in the URL works too. Every text, including the live messages, countdown, errors and number formats, is translated.
+- **A coin you can play with:** it leans towards the mouse, you can drag it to spin it (it keeps the speed of your throw), and clicking or tapping it flips it.
+- **More motion:** sections rise in as you scroll, divider lines draw themselves, numbers count up, buttons are slightly magnetic, a progress bar tracks the scroll, and dark cards light up under the mouse.
 - **A dedicated miner page** (`mine.html`): a large 3D coin inside a ring that fills up during your 24 h cooldown, your balance, next/last mine, live supply stats and a feed of recent mines read from the contract's `Mined` events.
 - If the system has **"reduce motion"** turned on, or the libraries fail to load, the site stays static (a fixed coin in each section) and everything keeps working.
 
@@ -103,6 +108,7 @@ NETWORK: "base",
 Commit and push, then run the Pages workflow again.
 
 To change the **name**, edit `NAME` and `SYMBOL` in `app.js` and `ERC20("Nova", "NOVA")` in the contract (before deploying).
+To change or add **texts and languages**, edit `i18n.js` (copy the `en` block to add a language).
 To change the **colours**, edit the variables at the top of `style.css` (`--lime` is the logo green).
 
 ### 4. Verify the contract on Basescan (highly recommended)

@@ -1,30 +1,15 @@
 /* =========================================================
-   Nova · Miner page animations
-   - Builds the 3D coin's edge
-   - Celebration spin when mining (called by app.js)
+   Nova · Miner page entrance
+   (The coin's edge, mouse interaction and celebration live in fx.js.)
    ========================================================= */
 (() => {
-  const coin = document.querySelector(".coin3d");
-  if (!coin) return;
-
-  /* ---------- Coin thickness (edge layers) ---------- */
-  const edge = coin.querySelector(".coin-edge");
-  const depth = parseFloat(getComputedStyle(coin).getPropertyValue("--coin-depth")) || 10;
-  const THICK = depth * 2 - 2, LAYERS = Math.round(depth * 1.5);
-  for (let i = 0; i < LAYERS; i++) {
-    const s = document.createElement("span");
-    s.style.transform = `translateZ(${-THICK / 2 + (i * THICK) / (LAYERS - 1)}px)`;
-    edge.appendChild(s);
-  }
-
-  /* ---------- Celebration spin ---------- */
-  const spin = coin.querySelector(".token-spin");
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  window.novaCelebrate = () => {
-    if (reduce || typeof gsap === "undefined") return;
-    gsap.timeline()
-      .fromTo(spin, { rotationY: 0 }, { rotationY: 720, duration: 1.5, ease: "power3.out" }, 0)
-      .to(spin, { scale: 1.08, duration: 0.25, ease: "power2.out" }, 0)
-      .to(spin, { scale: 1, duration: 0.9, ease: "elastic.out(1, 0.45)" }, 0.25);
-  };
+  if (reduce || typeof gsap === "undefined" || !document.querySelector(".coin3d")) return;
+
+  gsap.timeline({ defaults: { ease: "power4.out" } })
+    .from(".stage", { y: 36, opacity: 0, duration: 1.1, clearProps: "transform,opacity" })
+    .from(".miner-side .panel", { y: 36, opacity: 0, duration: 1.1, stagger: 0.1, clearProps: "transform,opacity" }, 0.1)
+    .from(".coin3d .token-spin", { scale: 0.35, rotationY: -400, opacity: 0, duration: 1.8, ease: "expo.out" }, 0.15)
+    .from(".ring", { scale: 0.8, opacity: 0, duration: 1.3 }, 0.25)
+    .from(".stage > :not(.stage-coin)", { y: 16, opacity: 0, duration: 0.9, stagger: 0.06, clearProps: "transform,opacity" }, 0.45);
 })();
