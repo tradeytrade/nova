@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nova · The coin you mine in one click</title>
-  <meta name="description" data-i18n-content="meta.desc" content="Nova is a coin on the Base network that anyone can mine for free from the web, once every 24 hours." />
+  <meta name="description" data-i18n-content="meta.desc" content="Nova is a coin on the Base network you mine for free from the web, once a day. 50,000 NOVA are shared among each day’s miners, halving every 210 days." />
   <meta name="theme-color" content="#F1F2EE" />
   <meta property="og:title" content="Nova · The coin you mine in one click" />
-  <meta property="og:description" content="100 NOVA every 24 hours, up to one million. No presale, no creator allocation." />
+  <meta property="og:description" content="Mine once a day and share 50,000 NOVA with everyone who mined. Halving every 210 days, 21 million max. No presale, no creator allocation." />
   <meta property="og:image" content="logo.png" />
   <link rel="alternate" hreflang="en" href="?lang=en" />
   <link rel="alternate" hreflang="es" href="?lang=es" />
@@ -78,8 +78,8 @@
             <span class="line"><span data-i18n="hero.l3">in one click.</span></span>
           </h1>
           <p class="hero-lead" data-i18n-html="hero.lead">
-            Connect your wallet, hit Mine and get <span data-reward>100</span> <span data-symbol>NOVA</span>.
-            Every wallet can mine again every 24 hours, until the million coins run out.
+            Hit Mine once a day and share the <span data-stat="daily">50,000</span> <span data-symbol>NOVA</span> released that day with everyone who mined.
+            No race and no presale: every miner gets an equal share.
           </p>
           <div class="hero-actions">
             <a href="#mine" class="btn btn-lime" data-magnetic data-i18n="hero.start">Start mining</a>
@@ -96,8 +96,8 @@
 
       <div class="hero-live" data-i18n-aria="hero.liveData" aria-label="Live data">
         <p data-i18n-html="hero.mined"><strong><span data-stat="supply">—</span></strong> <span data-symbol>NOVA</span> mined</p>
-        <p data-i18n-html="hero.miners"><strong><span data-stat="miners">—</span></strong> miners</p>
-        <p data-i18n-html="hero.left"><strong><span data-stat="remaining">—</span></strong> left to mine</p>
+        <p data-i18n-html="hero.today"><strong><span data-stat="today">—</span></strong> mining today</p>
+        <p data-i18n-html="hero.daily"><strong><span data-stat="daily">50,000</span></strong> <span data-symbol>NOVA</span> to share today</p>
       </div>
 
       <!-- Rock strata (parallax) -->
@@ -114,7 +114,8 @@
         <div class="token-anchor anchor-manifesto" data-anchor="manifesto"></div>
         <p class="manifesto-text" data-fill data-i18n="manifesto">
           No server farms. No graphics cards. No presale and no coins set aside for the creator.
-          Just a public contract that gives 100 NOVA to anyone who asks, once a day, until it reaches one million.
+          Just a public contract that releases 50,000 NOVA every day and shares them equally among everyone who shows up,
+          halving every 210 days, until 21 million.
         </p>
       </div>
     </section>
@@ -129,20 +130,24 @@
         </div>
         <ul class="rules-list">
           <li>
-            <h3 data-i18n="r1.h">One million. Not one more.</h3>
-            <p data-i18n="r1.p">The contract can never create more than 1,000,000 NOVA. Once they are all mined, mining closes forever.</p>
+            <h3 data-i18n="r1.h">21 million. Not one more.</h3>
+            <p data-i18n="r1.p">The contract can never create more than 21,000,000 NOVA. The daily reward keeps halving, so the total gets closer and closer to that limit without ever passing it.</p>
           </li>
           <li>
-            <h3 data-i18n-html="r2.h"><span data-reward>100</span> NOVA per mine</h3>
-            <p data-i18n="r2.p">Every time you mine, the coins go straight to your wallet. No middlemen.</p>
+            <h3 data-i18n-html="r2.h"><span data-stat="daily">50,000</span> NOVA a day, shared</h3>
+            <p data-i18n="r2.p">Every day the contract releases a fixed amount, split equally among every wallet that mined that day. No race: mining at 9:00 or at 23:00 gives the same share.</p>
           </li>
           <li>
-            <h3 data-i18n="r3.h">Once every 24 hours</h3>
-            <p data-i18n="r3.p">The contract remembers when you last mined and rejects any attempt before your time is up.</p>
+            <h3 data-i18n="r3.h">Halving every 210 days</h3>
+            <p data-i18n="r3.p">The daily reward halves every 210 days, just like Bitcoin’s reward halves every 210,000 blocks. Early miners get more, and NOVA gets scarcer over time.</p>
           </li>
           <li>
-            <h3 data-i18n="r4.h">The creator starts at zero</h3>
-            <p data-i18n="r4.p">No reserved coins. Whoever launched Nova has to mine just like everyone else.</p>
+            <h3 data-i18n="r4.h">Nobody can take it all</h3>
+            <p data-i18n="r4.p">At most one daily reward can be created per day, whatever happens. Not even someone with a thousand wallets can empty the supply.</p>
+          </li>
+          <li>
+            <h3 data-i18n="r5.h">The creator starts at zero</h3>
+            <p data-i18n="r5.p">No reserved coins. Whoever launched Nova has to mine just like everyone else.</p>
           </li>
         </ul>
       </div>
@@ -164,15 +169,15 @@
             <li>
               <span class="step-n">2</span>
               <div>
-                <h3 data-i18n="s2.h">Hit Mine</h3>
-                <p data-i18n-html="s2.p">Confirm the transaction. You pay a few cents in gas and get <span data-reward>100</span> NOVA right away.</p>
+                <h3 data-i18n="s2.h">Mine once a day</h3>
+                <p data-i18n="s2.p">Confirm the transaction. You pay a few cents in gas and join today’s miners.</p>
               </div>
             </li>
             <li>
               <span class="step-n">3</span>
               <div>
-                <h3 data-i18n="s3.h">Come back tomorrow</h3>
-                <p data-i18n="s3.p">A countdown tells you when you can mine again.</p>
+                <h3 data-i18n="s3.h">Collect your share</h3>
+                <p data-i18n="s3.p">When the day closes (00:00 UTC), the day’s NOVA are split among everyone who mined. Your share is paid the next time you mine, or claim it whenever you want.</p>
               </div>
             </li>
           </ol>
@@ -185,7 +190,7 @@
     <section class="mine" id="mine">
       <div class="mine-inner">
         <div class="mine-copy">
-          <h2 data-reveal data-i18n="mine.title">Mine your first NOVA</h2>
+          <h2 data-reveal data-i18n="mine.title">Mine today’s NOVA</h2>
           <p class="mine-sub" data-reveal data-i18n="mine.sub">Read live from the blockchain. Refreshes on its own every few seconds.</p>
           <a href="mine.html" class="arrow-link" data-reveal><span data-i18n="mine.full">Open the full miner, with live activity</span> <span aria-hidden="true">→</span></a>
 
@@ -195,13 +200,13 @@
               <strong data-stat="pct">0%</strong>
             </div>
             <div class="supply-bar"><div class="supply-fill" data-progress></div></div>
-            <p class="supply-foot" data-i18n-html="supply.of"><span data-stat="supply">—</span> of <span data-stat="max">1,000,000</span> <span data-symbol>NOVA</span></p>
+            <p class="supply-foot" data-i18n-html="supply.of"><span data-stat="supply">—</span> of <span data-stat="max">21,000,000</span> <span data-symbol>NOVA</span></p>
           </div>
 
           <dl class="mine-stats" data-reveal>
-            <div><dt data-i18n="stat.mines">Mines</dt><dd data-stat="mines">—</dd></div>
-            <div><dt data-i18n="stat.miners">Miners</dt><dd data-stat="miners">—</dd></div>
-            <div><dt data-i18n="stat.left">Left to mine</dt><dd data-stat="remaining">—</dd></div>
+            <div><dt data-i18n="stat.daily">Today’s reward</dt><dd data-stat="daily">50,000</dd></div>
+            <div><dt data-i18n="stat.today">Miners today</dt><dd data-stat="today">—</dd></div>
+            <div><dt data-i18n="stat.closes">Day closes in</dt><dd data-clock>--:--:--</dd></div>
           </dl>
         </div>
 
@@ -219,6 +224,7 @@
           <p id="mineStatus" class="mine-status" aria-live="polite">You need MetaMask and a few cents of ETH on <span data-network>Base</span> for gas.</p>
 
           <div class="mine-links">
+            <button id="claimBtn" class="text-link claim-link hidden" type="button"></button>
             <button id="addTokenBtn" class="text-link" type="button" data-i18n-html="addToken">Add <span data-symbol>NOVA</span> to MetaMask</button>
             <a id="explorerLink" class="text-link" href="#" target="_blank" rel="noopener" data-contract-link data-i18n="viewContract">View contract</a>
           </div>
@@ -237,19 +243,27 @@
           </details>
           <details>
             <summary data-i18n="faq.q2">Is this mining like Bitcoin?</summary>
-            <p data-i18n="faq.a2">Not quite. In Bitcoin, computers compete to solve calculations. Here, mining is a contract rule that creates new coins for whoever asks, with a limit per wallet per day. What they share is a limited supply that is handed out little by little.</p>
+            <p data-i18n="faq.a2">Closer than you’d think. Like Bitcoin, a fixed reward is released on a schedule, it halves over time (every 210 days here, every 210,000 blocks there) and the total stops at 21 million. The difference: in Bitcoin, computers compete to solve calculations; here, the day’s reward is split equally among everyone who pressed Mine.</p>
           </details>
           <details>
-            <summary data-i18n="faq.q3">Why Base?</summary>
-            <p data-i18n="faq.a3">Base is a layer-2 network built on Ethereum. It inherits Ethereum’s security, but fees are much lower, so one transaction a day makes sense.</p>
+            <summary data-i18n="faq.q3">Why do I get my coins the next day?</summary>
+            <p data-i18n="faq.a3">Your share depends on how many people mine that day, and that is only known when the day closes at 00:00 UTC. It is paid automatically the next time you mine, or you can claim it any time with the “Claim” button.</p>
           </details>
           <details>
-            <summary data-i18n="faq.q4">Is it worth anything? Can I buy it?</summary>
-            <p data-i18n="faq.a4">No. It is an educational project: it is not sold and is not listed on any exchange. It exists to learn how tokens and smart contracts work.</p>
+            <summary data-i18n="faq.q4">Can someone take all the coins?</summary>
+            <p data-i18n-html="faq.a4">No. At most <span data-stat="daily">50,000</span> NOVA can be created per day, whatever happens. Someone with many wallets gets more shares of a day, but each wallet pays gas every day, and nobody can empty the supply or stop others from getting their share.</p>
           </details>
           <details>
-            <summary data-i18n="faq.q5">I can’t see my coins in MetaMask</summary>
-            <p data-i18n="faq.a5">Click “Add NOVA to MetaMask” in the mining panel. The coin will show up in your wallet with its logo.</p>
+            <summary data-i18n="faq.q5">Why Base?</summary>
+            <p data-i18n="faq.a5">Base is a layer-2 network built on Ethereum. It inherits Ethereum’s security, but fees are much lower, so one transaction a day makes sense.</p>
+          </details>
+          <details>
+            <summary data-i18n="faq.q6">Is it worth anything? Can I buy it?</summary>
+            <p data-i18n="faq.a6">No. It is an educational project: it is not sold and is not listed on any exchange. It exists to learn how tokens and smart contracts work.</p>
+          </details>
+          <details>
+            <summary data-i18n="faq.q7">I can’t see my coins in MetaMask</summary>
+            <p data-i18n="faq.a7">Click “Add NOVA to MetaMask” in the mining panel. The coin will show up in your wallet with its logo.</p>
           </details>
         </div>
       </div>
@@ -259,7 +273,7 @@
     <section class="outro">
       <p class="outro-word" aria-hidden="true" data-name>Nova</p>
       <div class="outro-inner">
-        <p class="outro-text" data-reveal data-i18n="outro.text">One click a day. All the way to a million.</p>
+        <p class="outro-text" data-reveal data-i18n="outro.text">One click a day. Shared by everyone.</p>
         <a href="mine.html" class="btn btn-lime" data-reveal data-magnetic data-i18n="outro.cta">Open the miner</a>
       </div>
     </section>

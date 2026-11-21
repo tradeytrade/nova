@@ -1,0 +1,16 @@
+{
+  "name": "nova",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Nova (NOVA): a coin you mine from the web, once a day, on Base",
+  "license": "MIT",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "5.1.0",
+    "ethers": "6.13.4",
+    "hardhat": "2.22.17"
+  }
+}

@@ -1,11 +1,13 @@
 # Nova (NOVA): the coin you mine in one click
 
-An educational project: an ERC-20 token on the **Base** network that anyone can mine for free from a website, **100 NOVA every 24 hours**, up to a maximum of **1,000,000 NOVA**.
+An educational project: an ERC-20 token on the **Base** network that anyone can mine for free from a website, **once a day**. Every day the contract releases **50,000 NOVA** and splits them equally among everyone who mined that day. The daily amount **halves every 210 days**, like Bitcoin, so the supply approaches **21,000,000 NOVA** and never passes it.
 
 ```
 nova/
 ├── contracts/
 │   └── Nova.sol        ← smart contract (Solidity)
+├── test/
+│   └── Nova.test.js    ← tests for every contract rule (npm test)
 ├── web/
 │   ├── index.html      ← landing page (with a mining section)
 │   ├── mine.html       ← dedicated miner page
@@ -23,7 +25,8 @@ nova/
 │   └── favicon.png     ← fallback browser tab icon
 ├── .github/workflows/
 │   └── pages.yml       ← deploys web/ to GitHub Pages (manual trigger only)
-└── LAUNCH.md           ← launch plan
+├── package.json, hardhat.config.js ← only for compiling and testing locally
+└── LAUNCH.md           ← launch plan and why the rules are what they are
 ```
 
 ## The website
@@ -35,7 +38,7 @@ nova/
 - **Three languages:** English, Spanish and French, from the menu in the header. The choice is remembered, the browser's language is used the first time, and `?lang=es` / `?lang=fr` in the URL works too. Every text, including the live messages, countdown, errors and number formats, is translated.
 - **A coin you can play with:** it leans towards the mouse, you can drag it to spin it (it keeps the speed of your throw), and clicking or tapping it flips it.
 - **More motion:** sections rise in as you scroll, divider lines draw themselves, numbers count up, buttons are slightly magnetic, a progress bar tracks the scroll, and dark cards light up under the mouse.
-- **A dedicated miner page** (`mine.html`): a large 3D coin inside a ring that fills up during your 24 h cooldown, your balance, next/last mine, live supply stats and a feed of recent mines read from the contract's `Mined` events.
+- **A dedicated miner page** (`mine.html`): a large 3D coin inside a ring that fills up as the day goes by, a "Today" panel (reward to share, miners so far, what each one gets, countdown to 00:00 UTC, next halving), your balance and share, a Claim button, supply stats and a feed of recent activity read from the contract's `Mined` and `Claimed` events.
 - If the system has **"reduce motion"** turned on, or the libraries fail to load, the site stays static (a fixed coin in each section) and everything keeps working.
 
 Libraries (loaded from a CDN, pinned to exact versions, nothing to install): ethers.js 6.13.4, GSAP 3.12.5 + ScrollTrigger, and Lenis 1.1.13.
@@ -55,17 +58,31 @@ The coin artwork lives in `coin.svg` and `icon.svg`. If you edit them, re-export
 
 | Rule | Value |
 |---|---|
-| Maximum supply | 1,000,000 NOVA |
-| Reward per mine | 100 NOVA |
-| Time between mines | 24 h per wallet |
+| Maximum supply | 21,000,000 NOVA (hard cap) |
+| Released per day | 50,000 NOVA, split equally among that day's miners |
+| Halving | the daily amount halves every 210 days |
+| Mines per wallet | once per UTC day (00:00 to 24:00 UTC) |
+| When you get your share | when the day closes: paid on your next mine, or with `claim()` |
 | Creator pre-mine | 0 |
 
+Nobody can take the supply in one day: at most one daily reward can be created per day, whatever happens. [LAUNCH.md](LAUNCH.md) explains the design, the full emission schedule and what it can and can't prevent.
+
 Main functions:
-- `mine()`: mines your reward (reverts if 24 h haven't passed or the supply is exhausted)
-- `nextMineTime(wallet)`: when a wallet can mine again
-- `totalMiners()` / `totalMines()`: stats
-- `logoURI()`: link to the logo stored on-chain
-- `setLogoURI(url)`: only the creator can change the logo
+- `mine()`: join today's mining (also pays your share of the last day you mined)
+- `claim()`: collect your share of the last day you mined, without mining again
+- `info()`: today's numbers in one call (day, reward, miners today, when the day closes, next halving, supply, totals)
+- `minerInfo(wallet)`: a wallet's numbers in one call (mined today?, last day, what it can claim, its share today)
+- `dailyReward(day)`, `shareOf(day)`, `claimable(wallet)`, `today()`: the schedule, step by step
+- `logoURI()` / `setLogoURI(url)`: the logo link; only the creator can change it, nothing else
+
+### Test the contract
+
+```bash
+npm install
+npm test
+```
+
+The tests (`test/Nova.test.js`) run the contract on a local blockchain and move time forward to check every rule: the daily split, the halving, the 21M cap and more.
 
 ---
 
@@ -128,7 +145,7 @@ ERC-20 has no image field, so the site uses `wallet_watchAsset` (EIP-747). When 
 | Item | Cost |
 |---|---|
 | Deploying the contract on Base | cents |
-| Each mine | cents (paid by the miner) |
+| Each mine or claim | under a cent to a few cents (paid by the miner) |
 | Website on GitHub Pages | $0 |
 | Domain (optional) | ~$10/year |
 

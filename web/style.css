@@ -560,3 +560,17 @@ html.coin-dragging, html.coin-dragging * { cursor: grabbing !important; user-sel
   opacity: 0; transition: opacity .4s;
 }
 .mine-card:hover::before, .stage:hover::before, .panel:hover::before { opacity: 1; }
+
+/* =========================================================
+   Daily mining (today panel, claim link, activity feed)
+   ========================================================= */
+.panel-note { margin-top: 8px; font-size: .9rem; color: var(--mist); font-variant-numeric: tabular-nums; }
+.panel-clock { color: var(--stone); font-size: 1.7rem; }
+.panel-today .panel-stats { margin-top: 18px; }
+.panel-halving { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--rule-dark); }
+.panel-halving [data-stat] { color: var(--stone); font-weight: 700; }
+.panel-stats dd { white-space: nowrap; }
+.claim-link { color: var(--lime) !important; font-weight: 700; text-decoration-color: rgba(108,250,4,.45) !important; }
+.claim-link:disabled { opacity: .5; cursor: wait; }
+.feed .is-mine .feed-amt { color: var(--mist); font-weight: 500; font-size: .92rem; }
+.feed .is-mine .feed-dot { background: rgba(241,242,238,.35); }

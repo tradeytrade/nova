@@ -19,6 +19,9 @@ const CONFIG = {
   LOGO: "logo.png",
 };
 
+// The contract's fixed rules (contracts/Nova.sol). Shown before the contract is live.
+const SCHEDULE = { MAX_SUPPLY: 21_000_000, INITIAL_DAILY: 50_000, HALVING_DAYS: 210 };
+
 const NETWORKS = {
   base: {
     chainId: 8453,
@@ -43,16 +46,13 @@ const NETWORKS = {
 // Contract functions and events used by the site (ABI)
 const ABI = [
   "function mine()",
+  "function claim()",
   "function balanceOf(address) view returns (uint256)",
-  "function totalSupply() view returns (uint256)",
   "function MAX_SUPPLY() view returns (uint256)",
-  "function REWARD() view returns (uint256)",
-  "function COOLDOWN() view returns (uint256)",
-  "function totalMiners() view returns (uint256)",
-  "function totalMines() view returns (uint256)",
-  "function lastMine(address) view returns (uint256)",
-  "function nextMineTime(address) view returns (uint256)",
-  "event Mined(address indexed miner, uint256 amount)",
+  "function info() view returns (uint256 day, uint256 reward, uint256 minersToday, uint256 closesAt, uint256 halvingDay, uint256 supply, uint256 allMiners, uint256 allMines)",
+  "function minerInfo(address) view returns (bool minedToday, uint256 lastDay, bool hasMined, uint256 claimableNow, uint256 shareToday)",
+  "event Mined(address indexed miner, uint256 indexed day)",
+  "event Claimed(address indexed miner, uint256 indexed day, uint256 amount)",
 ];
 
 /* ---------- State ---------- */
@@ -61,15 +61,13 @@ const configured = /^0x[a-fA-F0-9]{40}$/.test(CONFIG.CONTRACT_ADDRESS);
 let readContract = null; // reads data without a wallet
 let signer = null;
 let account = null;
-let nextMine = 0;        // timestamp (seconds) of the next allowed mine
-let lastMined = 0;       // timestamp (seconds) of this wallet's last mine
-let cooldown = 86400;    // seconds between mines (read from the contract)
-let balance = null;      // this wallet's balance (in NOVA)
+let chain = null;        // today's numbers from the contract
+let me = null;           // this wallet's numbers from the contract
 let busy = false;
 let busyLabel = "";      // translation key shown on the button while busy
-let stats = null;        // last numbers read from the contract
+let rolling = false;     // a new day just started and we're re-reading
 let feedState = { empty: "feed.loading" }; // or { items: [...] }
-let feedSeen = null;     // tx hashes already shown, to animate only new ones
+let feedSeen = null;     // events already shown, to animate only new ones
 let statusState = null;  // { key, vars, type } of the message under the button
 
 /* ---------- Helpers ---------- */
@@ -86,12 +84,28 @@ const link = (path) => (net.explorer ? `${net.explorer}/${path}` : "#");
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+// When the current day closes (00:00 UTC). Uses the contract once it's live.
+const closesAt = () => chain?.closesAt || (Math.floor(now() / 86400) + 1) * 86400;
+const localTime = (ts) => new Date(ts * 1000).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
+
 function timeAgo(sec) {
   const s = Math.max(0, now() - sec);
   if (s < 60) return T("ago.now");
   if (s < 3600) return T("ago.min", { n: Math.floor(s / 60) });
   if (s < 86400) return T("ago.h", { n: Math.floor(s / 3600) });
   return T("ago.d", { n: Math.floor(s / 86400) });
+}
+
+function dayName(d) {
+  if (chain && d === chain.day) return T("day.today");
+  if (chain && d === chain.day - 1) return T("day.yesterday");
+  return T("day.n", { n: d });
+}
+
+function countdown(sec) {
+  sec = Math.max(0, sec);
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  return [h, m, s].map((x) => String(x).padStart(2, "0")).join(":");
 }
 
 // Shows a number, counting up (or down) from the previous value
@@ -117,7 +131,6 @@ function fillNames() {
   document.querySelectorAll("[data-name]").forEach((el) => (el.textContent = CONFIG.NAME));
   document.querySelectorAll("[data-symbol]").forEach((el) => (el.textContent = CONFIG.SYMBOL));
   document.querySelectorAll("[data-network]").forEach((el) => (el.textContent = net.name));
-  if (window.I18N) document.querySelectorAll("[data-reward]").forEach((el) => (el.textContent = I18N.vars.reward));
 }
 
 function init() {
@@ -128,15 +141,18 @@ function init() {
   document.querySelectorAll("[data-contract-link]").forEach((a) => (a.href = contractUrl));
 
   on("connectBtn", "click", connect);
-  on("mineBtn", "click", mine);
+  on("mineBtn", "click", () => send("mine"));
+  on("claimBtn", "click", () => send("claim"));
   on("addTokenBtn", "click", addToWallet);
   document.addEventListener("nova:lang", onLanguage);
 
   renderConnect();
   renderStats(false);
   renderFeed();
+  renderWallet();
   updateMineButton();
   setStatus("st.need");
+  setInterval(tick, 1000); // the day countdown runs even before the contract is live
 
   if (typeof ethers === "undefined") return setStatus("st.ethers", null, "error");
 
@@ -153,9 +169,8 @@ function init() {
 
   refreshStats();
   refreshFeed();
-  setInterval(refreshStats, 15000);
+  setInterval(() => { refreshStats(); refreshUser(); }, 15000);
   setInterval(refreshFeed, 30000);
-  setInterval(tick, 1000);
 
   // If the wallet was already connected before, reconnect without prompting
   if (window.ethereum) {
@@ -171,11 +186,10 @@ function onLanguage() {
   renderConnect();
   renderStats(false);
   renderFeed();
+  renderWallet(false);
   renderStatus();
-  if (balance !== null) showNum($("balance"), balance, 2, "", false);
   if (busy) setText("mineLabel", T(busyLabel));
   else updateMineButton();
-  if (!account || !lastMined) setText("lastMined", account ? T("never") : "—");
 }
 
 /* ---------- Wallet ---------- */
@@ -209,10 +223,9 @@ async function connect() {
     $("connectBtn")?.classList.add("connected");
     renderConnect();
     document.body.classList.add("is-connected");
-    setStatus("st.ready");
 
     await refreshUser();
-    refreshFeed();
+    renderFeed();
   } catch (err) {
     console.error(err);
     setStatus(...niceError(err), "error");
@@ -244,38 +257,57 @@ async function ensureNetwork() {
   }
 }
 
-/* ---------- Mine ---------- */
-async function mine() {
+/* ---------- Mine and claim ---------- */
+// The Claimed event in a receipt tells us what was just paid
+function paidIn(receipt) {
+  for (const log of receipt.logs) {
+    try {
+      const ev = readContract.interface.parseLog(log);
+      if (ev?.name === "Claimed") return { amount: units(ev.args.amount), day: Number(ev.args.day) };
+    } catch (_) { /* a log from another contract */ }
+  }
+  return null;
+}
+
+async function send(method) {
   if (!signer || busy) return;
   busy = true;
   const btn = $("mineBtn");
   btn.disabled = true;
   btn.classList.add("working");
+  $("claimBtn")?.setAttribute("disabled", "");
   busyLabel = "btn.confirm";
   setText("mineLabel", T(busyLabel));
   setStatus("st.confirm");
 
   try {
     const contract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, ABI, signer);
-    const tx = await contract.mine();
-    busyLabel = "btn.mining";
+    const tx = await contract[method]();
+    busyLabel = method === "mine" ? "btn.mining" : "btn.claiming";
     setText("mineLabel", T(busyLabel));
     const href = link("tx/" + tx.hash);
     const view = () => (net.explorer ? ` <a href="${href}" target="_blank" rel="noopener">${T("st.view")}</a>` : "");
     setStatus("st.sent", { view });
-    await tx.wait();
+    const receipt = await tx.wait();
 
-    celebrate();
-    const amount = fmt(units(await readContract.REWARD()));
-    setStatus("st.mined", { amount, symbol: CONFIG.SYMBOL }, "ok");
-    toast(T("toast.mined"));
-    await Promise.all([refreshUser(), refreshStats(), refreshFeed()]);
+    const paid = paidIn(receipt);
+    celebrate(paid?.amount ? `+${fmt(paid.amount)} ${CONFIG.SYMBOL}` : "⛏");
+    if (method === "mine") {
+      toast(paid?.amount ? T("toast.minedPaid", { amount: fmt(paid.amount), day: paid.day }) : T("toast.mined"));
+    } else {
+      toast(T("toast.claimed", { amount: fmt(paid?.amount || 0) }));
+    }
+    await refreshStats();
+    busy = false;
+    await refreshUser();
+    refreshFeed();
   } catch (err) {
     console.error(err);
     setStatus(...niceError(err), "error");
   } finally {
     busy = false;
     btn.classList.remove("working");
+    $("claimBtn")?.removeAttribute("disabled");
     updateMineButton();
   }
 }
@@ -306,77 +338,115 @@ async function addToWallet() {
   }
 }
 
-/* ---------- Data ---------- */
+/* ---------- Today's numbers ---------- */
 function eachStat(name, fn) {
   document.querySelectorAll(`[data-stat="${name}"]`).forEach(fn);
 }
 
-function renderStats(animate = true) {
-  if (!stats) {
-    eachStat("max", (el) => showNum(el, 1_000_000, 0, "", false));
-    return;
-  }
-  const { supply, max, miners, mines, reward } = stats;
-  const pct = max ? (supply / max) * 100 : 0;
-  const pd = pct < 1 ? 3 : 1;
-  eachStat("supply", (el) => showNum(el, supply, 0, "", animate));
-  eachStat("max", (el) => showNum(el, max, 0, "", false));
-  eachStat("remaining", (el) => showNum(el, max - supply, 0, "", animate));
-  eachStat("miners", (el) => showNum(el, miners, 0, "", animate));
-  eachStat("mines", (el) => showNum(el, mines, 0, "", animate));
-  eachStat("pct", (el) => showNum(el, pct, pd, "%", animate));
-  document.querySelectorAll("[data-progress]").forEach((el) => (el.style.width = Math.max(pct, 0.5) + "%"));
+// What one share of today is worth: yours if you mined, or what you'd get by joining now
+function shareEstimate() {
+  if (!chain) return 0;
+  const n = chain.minersToday + (me?.minedToday ? 0 : 1);
+  return chain.reward / Math.max(1, n);
+}
 
-  const r = fmt(reward);
-  if (window.I18N) I18N.vars.reward = r;
-  document.querySelectorAll("[data-reward]").forEach((el) => (el.textContent = r));
+function renderStats(animate = true) {
+  const max = chain?.max ?? SCHEDULE.MAX_SUPPLY;
+  const daily = chain?.reward ?? SCHEDULE.INITIAL_DAILY; // before launch: day 0's reward
+  if (window.I18N) {
+    I18N.vars.daily = fmt(daily);
+    I18N.vars.resettime = localTime(closesAt());
+  }
+  eachStat("max", (el) => showNum(el, max, 0, "", false));
+  eachStat("daily", (el) => showNum(el, daily, 0, "", animate && !!chain));
+  document.querySelectorAll("[data-reset-time]").forEach((el) => (el.textContent = localTime(closesAt())));
+  if (!chain) return;
+
+  const pct = max ? (chain.supply / max) * 100 : 0;
+  const pd = pct < 1 ? 3 : 1;
+  eachStat("supply", (el) => showNum(el, chain.supply, 0, "", animate));
+  eachStat("pct", (el) => showNum(el, pct, pd, "%", animate));
+  eachStat("miners", (el) => showNum(el, chain.allMiners, 0, "", animate));
+  eachStat("mines", (el) => showNum(el, chain.allMines, 0, "", animate));
+  eachStat("today", (el) => showNum(el, chain.minersToday, 0, "", animate));
+  eachStat("day", (el) => showNum(el, chain.day, 0, "", false));
+  eachStat("share", (el) => showNum(el, shareEstimate(), 0, "", animate));
+  eachStat("halving", (el) => showNum(el, chain.halvingDay - chain.day, 0, "", false));
+  eachStat("nextdaily", (el) => showNum(el, chain.reward / 2, 2, "", false));
+  document.querySelectorAll("[data-progress]").forEach((el) => (el.style.width = Math.max(pct, 0.5) + "%"));
 }
 
 async function refreshStats() {
+  if (!readContract) return;
   try {
-    const [supply, max, miners, mines, reward, cd] = await Promise.all([
-      readContract.totalSupply(),
-      readContract.MAX_SUPPLY(),
-      readContract.totalMiners(),
-      readContract.totalMines(),
-      readContract.REWARD(),
-      readContract.COOLDOWN(),
-    ]);
-    stats = {
-      supply: units(supply),
+    const [i, max] = await Promise.all([readContract.info(), chain ? chain.maxRaw : readContract.MAX_SUPPLY()]);
+    chain = {
+      day: Number(i.day),
+      reward: units(i.reward),
+      minersToday: Number(i.minersToday),
+      closesAt: Number(i.closesAt),
+      halvingDay: Number(i.halvingDay),
+      supply: units(i.supply),
+      allMiners: Number(i.allMiners),
+      allMines: Number(i.allMines),
       max: units(max),
-      miners: Number(miners),
-      mines: Number(mines),
-      reward: units(reward),
+      maxRaw: max,
     };
-    cooldown = Number(cd) || cooldown;
     renderStats(true);
-
-    if (stats.supply >= stats.max) {
-      nextMine = Infinity;
-      updateMineButton();
-    }
+    if (!busy) updateMineButton();
   } catch (err) {
     console.error("Error reading stats", err);
   }
 }
 
+/* ---------- This wallet ---------- */
 async function refreshUser() {
-  if (!account) return;
-  const [bal, next, last] = await Promise.all([
-    readContract.balanceOf(account),
-    readContract.nextMineTime(account),
-    readContract.lastMine(account),
-  ]);
-  balance = units(bal);
-  showNum($("balance"), balance, 2);
-  lastMined = Number(last);
-  setText("lastMined", lastMined ? timeAgo(lastMined) : T("never"));
-  if (nextMine !== Infinity) nextMine = Number(next);
-  updateMineButton();
+  if (!account || !readContract || busy) return;
+  try {
+    const [bal, m] = await Promise.all([readContract.balanceOf(account), readContract.minerInfo(account)]);
+    me = {
+      balance: units(bal),
+      minedToday: m.minedToday,
+      lastDay: Number(m.lastDay),
+      hasMined: m.hasMined,
+      claimable: units(m.claimableNow),
+      shareToday: units(m.shareToday),
+    };
+    renderWallet(true);
+    renderStats(false);
+    updateMineButton();
+    userStatus();
+  } catch (err) {
+    console.error("Error reading wallet", err);
+  }
 }
 
-/* ---------- Recent mines (mine.html) ---------- */
+// The message under the button, depending on where this wallet stands today
+function userStatus() {
+  if (!me || busy) return;
+  if (chain && chain.reward === 0) return setStatus("st.ended");
+  if (me.minedToday) {
+    return setStatus("st.joined", { share: () => fmt(shareEstimate()), time: () => localTime(closesAt()) }, "ok");
+  }
+  if (me.claimable > 0) return setStatus("st.claimHint", { amount: () => fmt(me.claimable), day: me.lastDay });
+  setStatus("st.ready");
+}
+
+function renderWallet(animate = true) {
+  if (me) showNum($("balance"), me.balance, 2, "", animate);
+  setText("lastMined", !account ? "—" : me?.hasMined ? dayName(me.lastDay) : T("never"));
+  setText("claimableText", me ? `${fmt(me.claimable)} ${CONFIG.SYMBOL}` : "—");
+  setText("shareText", me?.minedToday ? `~${fmt(shareEstimate())} ${CONFIG.SYMBOL}` : "—");
+
+  const claim = $("claimBtn");
+  if (claim) {
+    const show = !!(me && me.claimable > 0);
+    claim.classList.toggle("hidden", !show);
+    if (show) claim.textContent = T("btn.claim", { amount: fmt(me.claimable) });
+  }
+}
+
+/* ---------- Recent activity (mine.html) ---------- */
 function renderFeed(animateNew = false) {
   const el = $("feed");
   if (!el) return;
@@ -387,17 +457,18 @@ function renderFeed(animateNew = false) {
   const first = feedSeen === null;
   el.innerHTML = feedState.items.map((it, i) => {
     const you = account && it.who.toLowerCase() === account.toLowerCase();
-    const isNew = animateNew && (first || !feedSeen.has(it.hash));
-    const cls = [you && "is-you", isNew && "is-new"].filter(Boolean).join(" ");
+    const isNew = animateNew && (first || !feedSeen.has(it.key));
+    const cls = [you && "is-you", isNew && "is-new", it.kind === "Mined" && "is-mine"].filter(Boolean).join(" ");
+    const what = it.kind === "Claimed" ? `+${fmt(it.amount)} ${CONFIG.SYMBOL}` : T("feed.mined", { day: it.day });
     return `<li${cls ? ` class="${cls}"` : ""} style="--i:${i}">
       <a href="${link("tx/" + it.hash)}" target="_blank" rel="noopener">
         <span class="feed-dot" aria-hidden="true"></span>
         <span class="feed-who">${you ? T("feed.you") : short(it.who)}</span>
-        <span class="feed-amt">+${fmt(it.amount)} ${CONFIG.SYMBOL}</span>
+        <span class="feed-amt">${what}</span>
         <time class="feed-time">${it.time ? timeAgo(it.time) : ""}</time>
       </a></li>`;
   }).join("");
-  if (animateNew) feedSeen = new Set(feedState.items.map((it) => it.hash));
+  if (animateNew) feedSeen = new Set(feedState.items.map((it) => it.key));
 }
 
 async function refreshFeed() {
@@ -409,34 +480,53 @@ async function refreshFeed() {
     // Public RPCs limit how many blocks one query can cover, so try a wide range first
     for (const range of [9000, 2000]) {
       try {
-        events = await readContract.queryFilter(readContract.filters.Mined(), Math.max(0, latest - range), latest);
+        const from = Math.max(0, latest - range);
+        const [mined, claimed] = await Promise.all([
+          readContract.queryFilter(readContract.filters.Mined(), from, latest),
+          readContract.queryFilter(readContract.filters.Claimed(), from, latest),
+        ]);
+        events = [...mined, ...claimed];
         break;
       } catch (_) { /* try a smaller range */ }
     }
-    const recent = events.slice(-6).reverse();
+    const recent = events
+      .filter((e) => e.eventName === "Mined" || e.args.amount > 0n)
+      .sort((a, b) => b.blockNumber - a.blockNumber || b.index - a.index)
+      .slice(0, 6);
     if (!recent.length) {
       feedState = { empty: "feed.none" };
       return renderFeed();
     }
-    const blocks = await Promise.all(recent.map((e) => provider.getBlock(e.blockNumber)));
+    const blocks = await Promise.all([...new Set(recent.map((e) => e.blockNumber))].map((n) => provider.getBlock(n)));
+    const time = Object.fromEntries(blocks.filter(Boolean).map((b) => [b.number, b.timestamp]));
     feedState = {
-      items: recent.map((e, i) => ({
+      items: recent.map((e) => ({
+        kind: e.eventName,
+        key: `${e.transactionHash}:${e.index}`,
         who: e.args.miner,
-        amount: units(e.args.amount),
+        day: Number(e.args.day),
+        amount: e.eventName === "Claimed" ? units(e.args.amount) : 0,
         hash: e.transactionHash,
-        time: blocks[i]?.timestamp || 0,
+        time: time[e.blockNumber] || 0,
       })),
     };
     renderFeed(true);
   } catch (err) {
-    console.error("Error reading recent mines", err);
+    console.error("Error reading recent activity", err);
     feedState = { empty: "feed.error" };
     renderFeed();
   }
 }
 
-/* ---------- Button, countdown and cooldown ring ---------- */
+/* ---------- Clock, button and ring ---------- */
 function tick() {
+  const left = closesAt() - now();
+  document.querySelectorAll("[data-clock]").forEach((el) => (el.textContent = countdown(left)));
+  // A new day started: read everything again
+  if (left <= 0 && readContract && !rolling) {
+    rolling = true;
+    Promise.all([refreshStats(), refreshUser(), refreshFeed()]).finally(() => (rolling = false));
+  }
   if (account && !busy) updateMineButton();
 }
 
@@ -458,45 +548,39 @@ function updateMineButton() {
     setRing(0);
     return;
   }
-  if (nextMine === Infinity) {
+  if (chain && chain.reward === 0) {
     btn.disabled = true;
-    setText("mineLabel", T("btn.exhausted"));
-    setText("nextMineText", T("next.never"));
+    setText("mineLabel", T("btn.ended"));
+    setText("nextMineText", "—");
     setRing(0);
     return;
   }
-  const left = nextMine - now();
-  if (left > 0) {
+  if (me?.minedToday) {
+    // Already mined today: the ring fills up as the day goes by
+    const left = closesAt() - now();
     btn.disabled = true;
     setText("mineLabel", T("btn.next", { time: countdown(left) }));
     setText("nextMineText", countdown(left));
-    setRing(1 - left / cooldown);
+    setRing(1 - left / 86400);
   } else {
-    btn.disabled = false;
+    btn.disabled = !me;
     setText("mineLabel", T("btn.mine"));
     setText("nextMineText", T("next.ready"));
     setRing(1);
   }
-  if (lastMined) setText("lastMined", timeAgo(lastMined));
-}
-
-function countdown(sec) {
-  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
-  return [h, m, s].map((x) => String(x).padStart(2, "0")).join(":");
 }
 
 /* ---------- Effects ---------- */
-function celebrate() {
+function celebrate(text) {
   // 3D coin spin (defined in fx.js)
   if (typeof window.novaCelebrate === "function") window.novaCelebrate();
 
   const box = $("particles");
   if (!box) return;
-  const reward = document.querySelector("[data-reward]")?.textContent || "100";
   for (let i = 0; i < 9; i++) {
     const p = document.createElement("span");
     p.className = "particle";
-    p.textContent = i === 0 ? `+${reward} ${CONFIG.SYMBOL}` : "+";
+    p.textContent = i === 0 ? text : "+";
     p.style.setProperty("--dx", (Math.random() * 220 - 110) + "px");
     p.style.animationDelay = i * 0.07 + "s";
     p.style.fontSize = i === 0 ? "1.5rem" : (0.9 + Math.random() * 0.7) + "rem";
@@ -533,8 +617,9 @@ function niceError(err) {
   const msg = (err?.shortMessage || err?.reason || err?.message || "").toLowerCase();
   if (err?.code === 4001 || err?.code === "ACTION_REJECTED" || msg.includes("rejected")) return ["err.cancel", null];
   if (msg.includes("insufficient funds")) return ["err.funds", null];
-  if (msg.includes("wait 24h")) return ["err.wait", null];
-  if (msg.includes("max supply")) return ["err.max", null];
+  if (msg.includes("already mined today")) return ["err.wait", null];
+  if (msg.includes("mining has ended")) return ["err.ended", null];
+  if (msg.includes("nothing to claim")) return ["err.nothing", null];
   const raw = err?.shortMessage || err?.message;
   return ["err.generic", { msg: () => (raw ? esc(raw) : T("err.unknown")) }];
 }

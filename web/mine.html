@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nova Miner</title>
-  <meta name="description" data-i18n-content="meta.descMiner" content="Mine 100 NOVA every 24 hours on the Base network." />
+  <meta name="description" data-i18n-content="meta.descMiner" content="Mine once a day and share today’s NOVA on the Base network." />
   <meta name="theme-color" content="#0C2416" />
   <meta property="og:title" content="Nova Miner" />
-  <meta property="og:description" content="Mine 100 NOVA every 24 hours, up to one million. No presale, no creator allocation." />
+  <meta property="og:description" content="Mine once a day and share 50,000 NOVA with everyone who mined. Halving every 210 days, 21 million max." />
   <meta property="og:image" content="logo.png" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
   <link rel="icon" type="image/png" href="favicon.png" />
@@ -74,6 +74,7 @@
       <p id="mineStatus" class="mine-status" aria-live="polite">You need MetaMask and a few cents of ETH on <span data-network>Base</span> for gas.</p>
 
       <div class="mine-links">
+        <button id="claimBtn" class="text-link claim-link hidden" type="button"></button>
         <button id="addTokenBtn" class="text-link" type="button" data-i18n-html="addToken">Add <span data-symbol>NOVA</span> to MetaMask</button>
         <a class="text-link" href="#" target="_blank" rel="noopener" data-contract-link data-i18n="viewContract">View contract</a>
       </div>
@@ -81,17 +82,31 @@
 
     <!-- ===== SIDE PANELS ===== -->
     <aside class="miner-side">
+      <section class="panel panel-today" aria-labelledby="todayTitle">
+        <div class="panel-head">
+          <h2 id="todayTitle" class="panel-title" data-i18n-html="today.title">Today · day <span data-stat="day">—</span></h2>
+          <strong class="panel-big panel-clock" data-clock>--:--:--</strong>
+        </div>
+        <p class="panel-note" data-i18n-html="today.resets">New day at 00:00 UTC (<span data-reset-time></span> your time)</p>
+        <dl class="panel-stats">
+          <div><dt data-i18n="today.toShare">To share</dt><dd data-stat="daily">50,000</dd></div>
+          <div><dt data-i18n="today.miners">Miners</dt><dd data-stat="today">—</dd></div>
+          <div><dt data-i18n="today.each">Each gets</dt><dd>~<span data-stat="share">—</span></dd></div>
+        </dl>
+        <p class="panel-note panel-halving" data-i18n-html="today.halving">Halves to <span data-stat="nextdaily">—</span> NOVA in <span data-stat="halving">—</span> days</p>
+      </section>
+
       <section class="panel" aria-labelledby="supplyTitle">
         <div class="panel-head">
           <h2 id="supplyTitle" class="panel-title" data-i18n="supply.title">Supply mined</h2>
           <strong class="panel-big" data-stat="pct">0%</strong>
         </div>
         <div class="supply-bar"><div class="supply-fill" data-progress></div></div>
-        <p class="supply-foot" data-i18n-html="supply.of"><span data-stat="supply">—</span> of <span data-stat="max">1,000,000</span> <span data-symbol>NOVA</span></p>
+        <p class="supply-foot" data-i18n-html="supply.of"><span data-stat="supply">—</span> of <span data-stat="max">21,000,000</span> <span data-symbol>NOVA</span></p>
         <dl class="panel-stats">
           <div><dt data-i18n="stat.mines">Mines</dt><dd data-stat="mines">—</dd></div>
           <div><dt data-i18n="stat.miners">Miners</dt><dd data-stat="miners">—</dd></div>
-          <div><dt data-i18n="stat.leftShort">Left</dt><dd data-stat="remaining">—</dd></div>
+          <div><dt data-i18n="stat.day">Day</dt><dd data-stat="day">—</dd></div>
         </dl>
       </section>
 
@@ -100,12 +115,13 @@
         <dl class="panel-rows">
           <div><dt data-i18n="wallet.next">Next mine</dt><dd id="nextMineText">—</dd></div>
           <div><dt data-i18n="wallet.last">Last mined</dt><dd id="lastMined">—</dd></div>
-          <div><dt data-i18n="wallet.reward">Reward per mine</dt><dd><span data-reward>100</span> <span data-symbol>NOVA</span></dd></div>
+          <div><dt data-i18n="wallet.share">Your share today</dt><dd id="shareText">—</dd></div>
+          <div><dt data-i18n="wallet.ready">Ready to collect</dt><dd id="claimableText">—</dd></div>
         </dl>
       </section>
 
       <section class="panel" aria-labelledby="feedTitle">
-        <h2 id="feedTitle" class="panel-title" data-i18n="feed.title">Recent mines</h2>
+        <h2 id="feedTitle" class="panel-title" data-i18n="feed.title">Recent activity</h2>
         <ul id="feed" class="feed">
           <li class="feed-empty">Loading…</li>
         </ul>
