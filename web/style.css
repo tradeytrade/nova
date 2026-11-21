@@ -112,11 +112,9 @@ html.motion .token { display: block; }
 .coin-front { transform: translateZ(var(--coin-depth)); }
 .coin-back { transform: rotateY(180deg) translateZ(var(--coin-depth)); }
 .coin-edge { position: absolute; inset: 0; transform-style: preserve-3d; }
-.coin-edge span { /* milled edge: fine stripes around the rim, shaded like metal */
+.coin-edge span { /* smooth edge, shaded like metal */
   position: absolute; inset: 1px; border-radius: 50%;
-  background:
-    linear-gradient(90deg, rgba(8,30,0,.55), rgba(8,30,0,0) 32%, rgba(255,255,255,.28) 50%, rgba(8,30,0,0) 68%, rgba(8,30,0,.55)),
-    repeating-conic-gradient(#3A9A00 0deg 1.5deg, #68E80A 1.5deg 3deg);
+  background: linear-gradient(90deg, #2C8200, #4FBF00 32%, #9CFF52 50%, #4FBF00 68%, #2C8200);
 }
 
 /* Slots where the coin sits in each section.

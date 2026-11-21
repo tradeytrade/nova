@@ -1,19 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <!-- Simplified coin for small sizes (favicon, 32 px icons) -->
   <defs>
-    <linearGradient id="rim" x1=".15" y1=".05" x2=".85" y2=".95">
-      <stop offset="0" stop-color="#C8FF94"/>
-      <stop offset=".5" stop-color="#6CFA04"/>
-      <stop offset="1" stop-color="#2E7F00"/>
+    <linearGradient id="rim" x1=".18" y1=".06" x2=".82" y2=".94">
+      <stop offset="0" stop-color="#C6FF94"/>
+      <stop offset=".42" stop-color="#6CFA04"/>
+      <stop offset="1" stop-color="#2C8200"/>
     </linearGradient>
-    <radialGradient id="face" cx=".38" cy=".3" r=".85">
-      <stop offset="0" stop-color="#1A4E2F"/>
-      <stop offset="1" stop-color="#061A0D"/>
+    <radialGradient id="face" cx=".4" cy=".32" r=".8">
+      <stop offset="0" stop-color="#174A2B"/>
+      <stop offset="1" stop-color="#05160B"/>
     </radialGradient>
   </defs>
   <circle cx="32" cy="32" r="32" fill="url(#rim)"/>
-  <circle cx="32" cy="32" r="26.5" fill="url(#face)"/>
+  <circle cx="32" cy="32" r="27" fill="url(#face)"/>
   <g transform="translate(13 18.9) scale(.0803)">
-    <path fill="#7DFF1A" d="M45 44 Q47 24 67 24 L157 24 Q172 24 186 37 L352 201 L367 114 Q370 96 382 87 L473 0 Q473 52 466 100 L434 274 Q431 294 413 294 L315 294 Q300 294 287 282 L122 121 L106 206 Q103 220 93 230 L0 321 Q0 270 7 224 Z"/>
+    <path fill="#8CFF2E" d="M45 44 Q47 24 67 24 L157 24 Q172 24 186 37 L352 201 L367 114 Q370 96 382 87 L473 0 Q473 52 466 100 L434 274 Q431 294 413 294 L315 294 Q300 294 287 282 L122 121 L106 206 Q103 220 93 230 L0 321 Q0 270 7 224 Z"/>
   </g>
 </svg>
