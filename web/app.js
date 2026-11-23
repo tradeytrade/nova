@@ -8,7 +8,7 @@ const CONFIG = {
   SYMBOL: "NOVA",
   DECIMALS: 18,
 
-  // 👇 Paste the address Remix gives you after deploying (starts with 0x...)
+  // The Nova contract on the main network (Base)
   CONTRACT_ADDRESS: "0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B",
 
   // "baseSepolia" to test for free, "base" for the real network

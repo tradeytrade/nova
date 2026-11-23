@@ -2,7 +2,6 @@
 //   npm test                                              run the tests
 //   npx hardhat run scripts/deploy.js --network baseSepolia   deploy to the testnet
 // For deploying, put DEPLOYER_KEY=0x... in a .env file (it is git-ignored).
-// You can also deploy with Remix instead: see README.md.
 require("@nomicfoundation/hardhat-verify");
 const fs = require("fs");
 
