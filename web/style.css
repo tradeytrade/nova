@@ -590,3 +590,7 @@ html.coin-dragging, html.coin-dragging * { cursor: grabbing !important; user-sel
 .power-value { color: var(--stone); font-weight: 800; font-variant-numeric: tabular-nums; min-width: 3.2em; text-align: right; }
 .mine-status strong { color: inherit; }
 @media (prefers-reduced-motion: reduce) { .power-bar span { transition: none; } }
+
+/* Small, discreet link to the public test version (footer) */
+.testnet-link { flex-basis: 100%; font-size: .78rem; color: inherit; opacity: .4; text-decoration: none; transition: opacity .2s; }
+.testnet-link:hover, .testnet-link:focus-visible { opacity: 1; text-decoration: underline; }

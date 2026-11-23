@@ -25,7 +25,9 @@ nova/
 │   └── favicon.png     ← fallback browser tab icon
 ├── .github/workflows/
 │   └── pages.yml       ← deploys web/ to GitHub Pages (manual trigger only)
-├── package.json, hardhat.config.js ← only for compiling and testing locally
+├── scripts/
+│   └── deploy.js       ← deploy from the command line (optional)
+├── package.json, hardhat.config.js ← compile, test and deploy locally
 └── LAUNCH.md           ← launch plan and why the rules are what they are
 ```
 
@@ -85,6 +87,28 @@ npm test
 ```
 
 The tests (`test/Nova.test.js`) run the contract on a local blockchain and move time forward to check every rule: the daily split, the halving, the 21M cap and more.
+
+---
+
+## Public test version (Base Sepolia)
+
+The contract is live on the **Base Sepolia** testnet, where ETH is free:
+
+| | |
+|---|---|
+| Contract | [`0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B`](https://base-sepolia.blockscout.com/address/0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B) (source code verified) |
+| Launched | 23 Nov 2026 (day 0) |
+| Website | add `?testnet` to the address (`index.html?testnet`, `mine.html?testnet`), or use the small "Test version" link in the footer |
+
+The test address lives in `TESTNET_ADDRESS` in `web/app.js`. Empty it to hide the footer link.
+
+### Deploy with a script (alternative to Remix)
+
+```bash
+# .env (git-ignored):  DEPLOYER_KEY=0x...   (a wallet with a little ETH on that network)
+npx hardhat run scripts/deploy.js --network baseSepolia     # or --network base
+npx hardhat verify --network baseSepolia <address> ""       # publishes the source on Blockscout
+```
 
 ---
 

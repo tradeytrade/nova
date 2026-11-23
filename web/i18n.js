@@ -108,6 +108,8 @@
       "footer.note": "Educational project on the {network} network. No monetary value.",
       "footer.contract": "Contract on the explorer",
       "footer.back": "← Back to home",
+      "footer.testnet": "Test version (Base Sepolia)",
+      "footer.mainnet": "Leave the test version",
 
       "miner.tag": "Miner",
       "miner.stage": "Mine",
@@ -151,8 +153,10 @@
       "next.ready": "Ready now",
 
       "st.need": "You need MetaMask and a few cents of ETH on {network} for gas.",
+      "st.needTest": "Test version: you need MetaMask and free test ETH on Base Sepolia (search “Base Sepolia faucet”).",
       "st.ethers": "Couldn’t load the ethers.js library. Check your internet connection.",
       "st.notConfigured": "The contract isn’t configured yet.",
+      "st.soon": "Mining hasn’t opened yet. Come back soon!",
       "st.noMetamask": "MetaMask not detected. Install it from metamask.io and reload the page.",
       "st.ready": "Ready. Your mining power is {power}. Mine once a day to get a share of today’s {daily} NOVA.",
       "st.joined": "You’re in today’s mining at {power}! Your share (about {share} NOVA so far) arrives after 00:00 UTC, {time} your time.",
@@ -273,6 +277,8 @@
       "footer.note": "Proyecto educativo en la red {network}. Sin valor monetario.",
       "footer.contract": "Contrato en el explorador",
       "footer.back": "← Volver al inicio",
+      "footer.testnet": "Versión de prueba (Base Sepolia)",
+      "footer.mainnet": "Salir de la versión de prueba",
 
       "miner.tag": "Minero",
       "miner.stage": "Minar",
@@ -316,8 +322,10 @@
       "next.ready": "Ya disponible",
 
       "st.need": "Necesitas MetaMask y unos céntimos de ETH en {network} para el gas.",
+      "st.needTest": "Versión de prueba: necesitas MetaMask y ETH de prueba gratis en Base Sepolia (busca «Base Sepolia faucet»).",
       "st.ethers": "No se pudo cargar la librería ethers.js. Revisa tu conexión a internet.",
       "st.notConfigured": "El contrato aún no está configurado.",
+      "st.soon": "El minado aún no ha abierto. ¡Vuelve pronto!",
       "st.noMetamask": "No se detecta MetaMask. Instálalo desde metamask.io y recarga la página.",
       "st.ready": "Listo. Tu potencia de minado es {power}. Mina una vez al día para llevarte parte de los {daily} NOVA de hoy.",
       "st.joined": "¡Ya estás en el minado de hoy con {power}! Tu parte (unos {share} NOVA por ahora) llega después de las 00:00 UTC, las {time} en tu hora.",
@@ -438,6 +446,8 @@
       "footer.note": "Projet éducatif sur le réseau {network}. Sans valeur monétaire.",
       "footer.contract": "Contrat sur l’explorateur",
       "footer.back": "← Retour à l’accueil",
+      "footer.testnet": "Version de test (Base Sepolia)",
+      "footer.mainnet": "Quitter la version de test",
 
       "miner.tag": "Mineur",
       "miner.stage": "Miner",
@@ -481,8 +491,10 @@
       "next.ready": "Disponible",
 
       "st.need": "Il vous faut MetaMask et quelques centimes d’ETH sur {network} pour le gas.",
+      "st.needTest": `Version de test$${NB}: il vous faut MetaMask et de l’ETH de test gratuit sur Base Sepolia (cherchez «$${NB}Base Sepolia faucet$${NB}»).`,
       "st.ethers": "Impossible de charger la bibliothèque ethers.js. Vérifiez votre connexion internet.",
       "st.notConfigured": "Le contrat n’est pas encore configuré.",
+      "st.soon": `Le minage n’est pas encore ouvert. Revenez bientôt${NB}!`,
       "st.noMetamask": "MetaMask introuvable. Installez-le depuis metamask.io et rechargez la page.",
       "st.ready": "Prêt. Votre puissance de minage est de {power}. Minez une fois par jour pour recevoir une part des {daily} NOVA du jour.",
       "st.joined": `Vous participez au minage du jour à {power}${NB}! Votre part (environ {share} NOVA pour l’instant) arrive après 00:00 UTC, soit {time} chez vous.`,

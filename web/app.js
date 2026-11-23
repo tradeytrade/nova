@@ -15,6 +15,10 @@ const CONFIG = {
   // ("localhost" is only for development with a local node)
   NETWORK: "base",
 
+  // Public test version on Base Sepolia (free test ETH). Opened with ?testnet,
+  // from a small link in the footer. Leave empty to hide that link.
+  TESTNET_ADDRESS: "0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B",
+
   // Logo sent to MetaMask when the user clicks "Add to MetaMask"
   LOGO: "logo.png",
 };
@@ -27,13 +31,17 @@ const NETWORKS = {
     chainId: 8453,
     name: "Base",
     rpc: "https://mainnet.base.org",
+    // Base's own endpoint only searches ~100 blocks of events at a time,
+    // so the activity feed reads events from this free endpoint instead
+    logsRpc: "https://base-rpc.publicnode.com",
     explorer: "https://basescan.org",
   },
   baseSepolia: {
     chainId: 84532,
     name: "Base Sepolia (testnet)",
     rpc: "https://sepolia.base.org",
-    explorer: "https://sepolia.basescan.org",
+    logsRpc: "https://base-sepolia-rpc.publicnode.com",
+    explorer: "https://base-sepolia.blockscout.com", // shows the verified source code
   },
   localhost: {
     chainId: 31337,
@@ -56,8 +64,12 @@ const ABI = [
 ];
 
 /* ---------- State ---------- */
-const net = NETWORKS[CONFIG.NETWORK];
-const configured = /^0x[a-fA-F0-9]{40}$/.test(CONFIG.CONTRACT_ADDRESS);
+const isAddress = (a) => /^0x[a-fA-F0-9]{40}$/.test(a || "");
+const hasTestnet = isAddress(CONFIG.TESTNET_ADDRESS);
+const testnet = hasTestnet && new URLSearchParams(location.search).has("testnet");
+const net = testnet ? NETWORKS.baseSepolia : NETWORKS[CONFIG.NETWORK];
+const CONTRACT = testnet ? CONFIG.TESTNET_ADDRESS : CONFIG.CONTRACT_ADDRESS;
+const configured = isAddress(CONTRACT);
 let readContract = null; // reads data without a wallet
 let signer = null;
 let account = null;
@@ -135,11 +147,34 @@ function fillNames() {
   document.querySelectorAll("[data-network]").forEach((el) => (el.textContent = net.name));
 }
 
+// The small footer link to the public test version (and back)
+function renderTestnetLink() {
+  document.querySelectorAll("[data-testnet-link]").forEach((a) => {
+    a.classList.toggle("hidden", !hasTestnet);
+    a.textContent = T(testnet ? "footer.mainnet" : "footer.testnet");
+  });
+}
+
+function setupTestnet() {
+  if (testnet) {
+    document.documentElement.classList.add("is-testnet");
+    // Stay in test mode when moving between the home page and the miner
+    document.querySelectorAll('a[href$=".html"]:not([data-testnet-link])').forEach((a) => {
+      a.href = a.getAttribute("href") + "?testnet";
+    });
+  }
+  document.querySelectorAll("[data-testnet-link]").forEach((a) => {
+    a.href = testnet ? location.pathname.split("/").pop() || "index.html" : "?testnet";
+  });
+  renderTestnetLink();
+}
+
 function init() {
   if (window.I18N) Object.assign(I18N.vars, { name: CONFIG.NAME, symbol: CONFIG.SYMBOL, network: net.name });
   fillNames();
+  setupTestnet();
 
-  const contractUrl = configured ? link(`address/${CONFIG.CONTRACT_ADDRESS}`) : "#";
+  const contractUrl = configured ? link(`address/${CONTRACT}`) : "#";
   document.querySelectorAll("[data-contract-link]").forEach((a) => (a.href = contractUrl));
 
   on("connectBtn", "click", connect);
@@ -153,21 +188,26 @@ function init() {
   renderFeed();
   renderWallet();
   updateMineButton();
-  setStatus("st.need");
+  setStatus(testnet ? "st.needTest" : "st.need");
   setInterval(tick, 1000); // the day countdown runs even before the contract is live
 
   if (typeof ethers === "undefined") return setStatus("st.ethers", null, "error");
 
   if (!configured) {
-    $("configBanner")?.classList.remove("hidden");
-    setStatus("st.notConfigured", null, "error");
+    // While only the test version exists, visitors see a calm "not open yet"
+    // instead of the developer banner
+    if (hasTestnet) setStatus("st.soon");
+    else {
+      $("configBanner")?.classList.remove("hidden");
+      setStatus("st.notConfigured", null, "error");
+    }
     feedState = { empty: "feed.notLive" };
     renderFeed();
     return;
   }
 
   const rpc = new ethers.JsonRpcProvider(net.rpc, net.chainId, { staticNetwork: true });
-  readContract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, ABI, rpc);
+  readContract = new ethers.Contract(CONTRACT, ABI, rpc);
 
   refreshStats();
   refreshFeed();
@@ -185,6 +225,7 @@ function init() {
 // Re-draw everything the scripts write when the language changes
 function onLanguage() {
   fillNames();
+  renderTestnetLink();
   renderConnect();
   renderStats(false);
   renderFeed();
@@ -283,7 +324,7 @@ async function send(method) {
   setStatus("st.confirm");
 
   try {
-    const contract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, ABI, signer);
+    const contract = new ethers.Contract(CONTRACT, ABI, signer);
     const tx = await contract[method]();
     busyLabel = method === "mine" ? "btn.mining" : "btn.claiming";
     setText("mineLabel", T(busyLabel));
@@ -325,7 +366,7 @@ async function addToWallet() {
       params: {
         type: "ERC20",
         options: {
-          address: CONFIG.CONTRACT_ADDRESS,
+          address: CONTRACT,
           symbol: CONFIG.SYMBOL,
           decimals: CONFIG.DECIMALS,
           image: new URL(CONFIG.LOGO, location.href).href,
@@ -400,6 +441,11 @@ async function refreshStats() {
       maxRaw: max,
     };
     renderStats(true);
+    if (me) {
+      // The wallet may have loaded first: its share estimate needs today's numbers
+      renderWallet(false);
+      userStatus();
+    }
     if (!busy) updateMineButton();
   } catch (err) {
     console.error("Error reading stats", err);
@@ -486,24 +532,38 @@ function renderFeed(animateNew = false) {
   if (animateNew) feedSeen = new Set(feedState.items.map((it) => it.key));
 }
 
+// Contract connected to the events endpoint (see logsRpc in NETWORKS)
+let _logs = null;
+function logsContract() {
+  if (!_logs) {
+    _logs = net.logsRpc
+      ? new ethers.Contract(CONTRACT, ABI, new ethers.JsonRpcProvider(net.logsRpc, net.chainId, { staticNetwork: true }))
+      : readContract;
+  }
+  return _logs;
+}
+
 async function refreshFeed() {
   if (!$("feed") || !readContract) return;
   try {
     const provider = readContract.runner;
     const latest = await provider.getBlockNumber();
-    let events = [];
-    // Public RPCs limit how many blocks one query can cover, so try a wide range first
-    for (const range of [9000, 2000]) {
+    let events = null;
+    // Public RPCs limit how many blocks one query can cover: try the events
+    // endpoint with a wide range first (~5 h of Base blocks), then smaller ones
+    const tries = [[logsContract(), 9000], [logsContract(), 2000], [readContract, 100]];
+    for (const [c, range] of tries) {
       try {
         const from = Math.max(0, latest - range);
         const [mined, claimed] = await Promise.all([
-          readContract.queryFilter(readContract.filters.Mined(), from, latest),
-          readContract.queryFilter(readContract.filters.Claimed(), from, latest),
+          c.queryFilter(c.filters.Mined(), from, latest),
+          c.queryFilter(c.filters.Claimed(), from, latest),
         ]);
         events = [...mined, ...claimed];
         break;
-      } catch (_) { /* try a smaller range */ }
+      } catch (_) { /* try the next option */ }
     }
+    if (!events) throw new Error("no endpoint returned events");
     const recent = events
       .filter((e) => e.eventName === "Mined" || e.args.amount > 0n)
       .sort((a, b) => b.blockNumber - a.blockNumber || b.index - a.index)
