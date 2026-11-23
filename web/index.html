@@ -79,7 +79,7 @@
           </h1>
           <p class="hero-lead" data-i18n-html="hero.lead">
             Hit Mine once a day and share the <span data-stat="daily">50,000</span> <span data-symbol>NOVA</span> released that day with everyone who mined.
-            No race and no presale: every miner gets an equal share.
+            No race and no presale, and the more NOVA you’ve mined and kept, the bigger your slice.
           </p>
           <div class="hero-actions">
             <a href="#mine" class="btn btn-lime" data-magnetic data-i18n="hero.start">Start mining</a>
@@ -114,7 +114,7 @@
         <div class="token-anchor anchor-manifesto" data-anchor="manifesto"></div>
         <p class="manifesto-text" data-fill data-i18n="manifesto">
           No server farms. No graphics cards. No presale and no coins set aside for the creator.
-          Just a public contract that releases 50,000 NOVA every day and shares them equally among everyone who shows up,
+          Just a public contract that releases 50,000 NOVA every day and shares them among everyone who shows up,
           halving every 210 days, until 21 million.
         </p>
       </div>
@@ -135,7 +135,11 @@
           </li>
           <li>
             <h3 data-i18n-html="r2.h"><span data-stat="daily">50,000</span> NOVA a day, shared</h3>
-            <p data-i18n="r2.p">Every day the contract releases a fixed amount, split equally among every wallet that mined that day. No race: mining at 9:00 or at 23:00 gives the same share.</p>
+            <p data-i18n="r2.p">Every day the contract releases a fixed amount, split among every wallet that mined that day according to its mining power. No race: mining at 9:00 or at 23:00 gives the same share.</p>
+          </li>
+          <li>
+            <h3 data-i18n="rp.h">Holders mine more</h3>
+            <p data-i18n="rp.p">Your mining power goes from 1x with no NOVA up to 10x, growing with the NOVA you mined and still hold. Newcomers start small; coins sent to you by others don’t count.</p>
           </li>
           <li>
             <h3 data-i18n="r3.h">Halving every 210 days</h3>
@@ -217,6 +221,11 @@
 
           <p class="balance-label" data-i18n="balance">Your balance</p>
           <p class="balance"><span id="balance">—</span> <span class="balance-sym" data-symbol>NOVA</span></p>
+          <div class="power" data-power-box>
+            <span class="power-label" data-i18n="wallet.power">Mining power</span>
+            <span class="power-bar" aria-hidden="true"><span></span></span>
+            <strong class="power-value" data-power>—</strong>
+          </div>
 
           <button id="mineBtn" class="btn btn-mine" disabled>
             <span id="mineLabel">Connect your wallet</span>
@@ -243,7 +252,7 @@
           </details>
           <details>
             <summary data-i18n="faq.q2">Is this mining like Bitcoin?</summary>
-            <p data-i18n="faq.a2">Closer than you’d think. Like Bitcoin, a fixed reward is released on a schedule, it halves over time (every 210 days here, every 210,000 blocks there) and the total stops at 21 million. The difference: in Bitcoin, computers compete to solve calculations; here, the day’s reward is split equally among everyone who pressed Mine.</p>
+            <p data-i18n="faq.a2">Closer than you’d think. Like Bitcoin, a fixed reward is released on a schedule, it halves over time (every 210 days here, every 210,000 blocks there) and the total stops at 21 million. The difference: in Bitcoin, computers compete to solve calculations; here, the day’s reward is split among everyone who pressed Mine, weighted by how much NOVA they hold.</p>
           </details>
           <details>
             <summary data-i18n="faq.q3">Why do I get my coins the next day?</summary>
@@ -251,7 +260,11 @@
           </details>
           <details>
             <summary data-i18n="faq.q4">Can someone take all the coins?</summary>
-            <p data-i18n-html="faq.a4">No. At most <span data-stat="daily">50,000</span> NOVA can be created per day, whatever happens. Someone with many wallets gets more shares of a day, but each wallet pays gas every day, and nobody can empty the supply or stop others from getting their share.</p>
+            <p data-i18n-html="faq.a4">No. At most <span data-stat="daily">50,000</span> NOVA can be created per day, whatever happens. New wallets start at 1x mining power, so creating many empty wallets gets little, and each one pays gas every day. Nobody can empty the supply or stop others from getting their share.</p>
+          </details>
+          <details>
+            <summary data-i18n="faq.q8">What is mining power?</summary>
+            <p data-i18n="faq.a8">It decides how big your slice of the day is. A wallet with no NOVA mines at 1x. Power grows with the NOVA you mined yourself and still hold, up to 10x when you hold two days’ worth of the daily reward (100,000 NOVA in the first 210 days). It grows fastest at the start: 1,000 NOVA gives 1.9x, 10,000 gives 3.8x and 25,000 gives 5.5x. NOVA sent to you by someone else doesn’t count, and if you send yours away, your power goes down.</p>
           </details>
           <details>
             <summary data-i18n="faq.q5">Why Base?</summary>

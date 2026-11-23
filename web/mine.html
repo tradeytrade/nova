@@ -67,6 +67,11 @@
 
       <p class="balance-label" data-i18n="balance">Your balance</p>
       <p class="balance"><span id="balance">—</span> <span class="balance-sym" data-symbol>NOVA</span></p>
+      <div class="power" data-power-box>
+        <span class="power-label" data-i18n="wallet.power">Mining power</span>
+        <span class="power-bar" aria-hidden="true"><span></span></span>
+        <strong class="power-value" data-power>—</strong>
+      </div>
 
       <button id="mineBtn" class="btn btn-mine" disabled>
         <span id="mineLabel">Connect your wallet</span>
@@ -91,7 +96,7 @@
         <dl class="panel-stats">
           <div><dt data-i18n="today.toShare">To share</dt><dd data-stat="daily">50,000</dd></div>
           <div><dt data-i18n="today.miners">Miners</dt><dd data-stat="today">—</dd></div>
-          <div><dt data-i18n="today.each">Each gets</dt><dd>~<span data-stat="share">—</span></dd></div>
+          <div><dt data-i18n="today.each">Average share</dt><dd>~<span data-stat="share">—</span></dd></div>
         </dl>
         <p class="panel-note panel-halving" data-i18n-html="today.halving">Halves to <span data-stat="nextdaily">—</span> NOVA in <span data-stat="halving">—</span> days</p>
       </section>
@@ -114,6 +119,7 @@
         <h2 id="walletTitle" class="panel-title" data-i18n="wallet.title">Your wallet</h2>
         <dl class="panel-rows">
           <div><dt data-i18n="wallet.next">Next mine</dt><dd id="nextMineText">—</dd></div>
+          <div><dt data-i18n="wallet.power">Mining power</dt><dd data-power>—</dd></div>
           <div><dt data-i18n="wallet.last">Last mined</dt><dd id="lastMined">—</dd></div>
           <div><dt data-i18n="wallet.share">Your share today</dt><dd id="shareText">—</dd></div>
           <div><dt data-i18n="wallet.ready">Ready to collect</dt><dd id="claimableText">—</dd></div>

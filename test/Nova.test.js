@@ -59,7 +59,7 @@ describe("Nova", function () {
     await mine(wallets[1]); // a new day: allowed again
   });
 
-  it("splits the day's reward equally, whatever time you mined", async () => {
+  it("splits the day's reward equally between equal miners, whatever time they mined", async () => {
     for (const w of wallets.slice(1, 5)) await mine(w);
     // While the day is open nothing can be claimed yet
     assert.equal(await nova.claimable(await wallets[1].getAddress()), 0n);
@@ -80,6 +80,49 @@ describe("Nova", function () {
     await nextDay();
     await mine(wallets[1]);
     assert.equal(await balance(wallets[1]), NOVA(50000));
+  });
+
+  it("gives 1x power to wallets with no NOVA and more to holders", async () => {
+    const [a, b] = [await wallets[1].getAddress(), await wallets[2].getAddress()];
+    assert.equal(await nova.miningPower(a), 100n); // 1x
+
+    await mine(wallets[1]); // alone on day 0: earns 50,000
+    await nextDay();
+    await mine(wallets[1]); // gets paid first, then mines holding 50,000
+    await mine(wallets[2]); // a newcomer
+    // 50,000 of the 100,000 needed for full power: 1x + 9x * sqrt(0.5) = 7.36x
+    assert.equal((await nova.miners(a)).power, 736n);
+    assert.equal((await nova.miners(b)).power, 100n);
+
+    await nextDay();
+    await claim(wallets[1]);
+    await claim(wallets[2]);
+    assert.equal(await balance(wallets[1]), NOVA(50000) + (NOVA(50000) * 736n) / 836n);
+    assert.equal(await balance(wallets[2]), (NOVA(50000) * 100n) / 836n); // about 5,981
+  });
+
+  it("caps mining power at 10x", async () => {
+    const a = await wallets[1].getAddress();
+    await mine(wallets[1]);
+    await nextDay();
+    await mine(wallets[1]);
+    await nextDay();
+    await mine(wallets[1]); // now holds 100,000 mined NOVA
+    assert.equal((await nova.miners(a)).power, 1000n);
+  });
+
+  it("only counts NOVA you mined yourself and still hold", async () => {
+    const [a, c] = [await wallets[1].getAddress(), await wallets[3].getAddress()];
+    await mine(wallets[1]);
+    await nextDay();
+    await claim(wallets[1]); // holds 50,000
+    assert.equal(await nova.miningPower(a), 736n);
+
+    // Sending it to another wallet doesn't give that wallet power...
+    await (await nova.connect(wallets[1]).transfer(c, NOVA(50000))).wait();
+    assert.equal(await nova.miningPower(c), 100n);
+    // ...and the sender loses its power because it no longer holds the coins
+    assert.equal(await nova.miningPower(a), 100n);
   });
 
   it("still pays a day you mined if you come back much later", async () => {
@@ -144,11 +187,13 @@ describe("Nova", function () {
     assert.equal(info.day, 0n);
     assert.equal(info.reward, NOVA(50000));
     assert.equal(info.minersToday, 2n);
+    assert.equal(info.powerToday, 200n);
     assert.equal(info.allMiners, 2n);
     const me = await nova.minerInfo(await wallets[1].getAddress());
     assert.equal(me.minedToday, true);
     assert.equal(me.shareToday, NOVA(25000));
     assert.equal(me.claimableNow, 0n);
+    assert.equal(me.power, 100n);
 
     await nextDay();
     const later = await nova.minerInfo(await wallets[1].getAddress());

@@ -2,14 +2,21 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 /// @title Nova (NOVA): a coin you mine from the web, once a day
 /// @notice How it works:
 ///  - Every day (00:00 to 24:00 UTC) the contract releases a fixed amount of
 ///    NOVA: the daily reward. It starts at 50,000 NOVA.
 ///  - Every wallet can mine once per day. When the day closes, that day's
-///    reward is split EQUALLY among everyone who mined it. There is no race:
-///    mining at 00:01 or at 23:59 gives the same share.
+///    reward is split among everyone who mined it, according to their
+///    MINING POWER. There is no race: mining at 00:01 or at 23:59 is the same.
+///  - Mining power goes from 1x (no NOVA) to 10x. It grows with the NOVA you
+///    mined yourself and still hold, and reaches 10x when you hold two days'
+///    worth of the daily reward (100,000 NOVA at the start). It follows a
+///    square root, so the first coins help the most.
+///    Only coins you mined count: NOVA sent to you by others doesn't raise
+///    your power, so one balance can't be passed around to power many wallets.
 ///  - Your share is paid automatically the next time you mine, or whenever
 ///    you call claim().
 ///  - The daily reward halves every 210 days, like Bitcoin's block reward
@@ -25,6 +32,11 @@ contract Nova is ERC20 {
     uint256 public constant HALVING_DAYS  = 210;                   // reward halves every 210 days
     uint256 public constant DAY           = 1 days;                // days start at 00:00 UTC
 
+    // Mining power, in hundredths: 100 = 1x, 1000 = 10x
+    uint256 public constant MIN_POWER       = 100;  // a wallet with no NOVA
+    uint256 public constant MAX_POWER       = 1000; // the cap
+    uint256 public constant FULL_POWER_DAYS = 2;    // hold 2 days of reward to reach the cap
+
     // ---------- Project data ----------
     address public immutable creator;   // whoever deployed the contract (starts with 0 NOVA)
     uint256 public immutable launchDay; // UTC day of deployment, counted from 1 Jan 1970
@@ -33,17 +45,20 @@ contract Nova is ERC20 {
     // ---------- Miners ----------
     struct Miner {
         uint64 lastDay;  // last day (counted from launch) this wallet mined
+        uint32 power;    // mining power it had that day (100 = 1x)
         bool   hasMined; // false until the wallet mines for the first time
         bool   paid;     // whether the share of lastDay has been paid
     }
     mapping(address => Miner)   public miners;
-    mapping(uint256 => uint256) public minersOnDay; // day => how many wallets mined it
+    mapping(address => uint256) public minedBy;      // NOVA each wallet has received from mining
+    mapping(uint256 => uint256) public minersOnDay;  // day => how many wallets mined it
+    mapping(uint256 => uint256) public powerOnDay;   // day => total mining power of that day
 
     // ---------- Stats ----------
     uint256 public totalMiners; // distinct wallets that have mined
     uint256 public totalMines;  // total number of mines
 
-    event Mined(address indexed miner, uint256 indexed day);
+    event Mined(address indexed miner, uint256 indexed day, uint256 power);
     event Claimed(address indexed miner, uint256 indexed day, uint256 amount);
     event LogoUpdated(string newLogoURI);
 
@@ -71,11 +86,15 @@ contract Nova is ERC20 {
             _pay(msg.sender, m); // the last day you mined has already closed
         }
 
+        // Power is measured after that payment, so yesterday's share already counts
+        uint256 power = miningPower(msg.sender);
         m.lastDay = uint64(day);
+        m.power = uint32(power);
         m.paid = false;
         minersOnDay[day]++;
+        powerOnDay[day] += power;
         totalMines++;
-        emit Mined(msg.sender, day);
+        emit Mined(msg.sender, day, power);
     }
 
     /// @notice Collect your share of the last day you mined, without mining again.
@@ -87,11 +106,29 @@ contract Nova is ERC20 {
 
     function _pay(address who, Miner storage m) private {
         m.paid = true;
-        uint256 amount = shareOf(m.lastDay);
+        uint256 amount = shareOf(m.lastDay, m.power);
         uint256 room = MAX_SUPPLY - totalSupply(); // safety net: never pass the cap
         if (amount > room) amount = room;
-        if (amount > 0) _mint(who, amount);
+        if (amount > 0) {
+            minedBy[who] += amount;
+            _mint(who, amount);
+        }
         emit Claimed(who, m.lastDay, amount);
+    }
+
+    // =========================================================
+    //  Mining power
+    // =========================================================
+
+    /// @notice The power `user` would mine with right now (100 = 1x, 1000 = 10x).
+    ///         Counts only the NOVA they mined themselves and still hold.
+    function miningPower(address user) public view returns (uint256) {
+        uint256 held = Math.min(balanceOf(user), minedBy[user]);
+        uint256 full = dailyReward(today()) * FULL_POWER_DAYS;
+        if (full == 0 || held >= full) return MAX_POWER;
+        // sqrt(held / full), scaled by 1e9
+        uint256 root = Math.sqrt(held * 1e18 / full);
+        return MIN_POWER + (MAX_POWER - MIN_POWER) * root / 1e9;
     }
 
     // =========================================================
@@ -110,10 +147,11 @@ contract Nova is ERC20 {
         return INITIAL_DAILY >> halvings;
     }
 
-    /// @notice What each miner of `day` gets (an estimate while the day is still open).
-    function shareOf(uint256 day) public view returns (uint256) {
-        uint256 count = minersOnDay[day];
-        return count == 0 ? 0 : dailyReward(day) / count;
+    /// @notice What a miner with `power` gets from `day`
+    ///         (an estimate while the day is still open, as more people can join).
+    function shareOf(uint256 day, uint256 power) public view returns (uint256) {
+        uint256 total = powerOnDay[day];
+        return total == 0 ? 0 : dailyReward(day) * power / total;
     }
 
     /// @notice Timestamp when the current day closes (next 00:00 UTC).
@@ -134,7 +172,7 @@ contract Nova is ERC20 {
     function claimable(address user) public view returns (uint256) {
         Miner memory m = miners[user];
         if (!m.hasMined || m.paid || m.lastDay >= today()) return 0;
-        return shareOf(m.lastDay);
+        return shareOf(m.lastDay, m.power);
     }
 
     /// @notice Everything the website shows about today, in one call.
@@ -142,6 +180,7 @@ contract Nova is ERC20 {
         uint256 day,
         uint256 reward,
         uint256 minersToday,
+        uint256 powerToday,
         uint256 closesAt,
         uint256 halvingDay,
         uint256 supply,
@@ -149,20 +188,40 @@ contract Nova is ERC20 {
         uint256 allMines
     ) {
         day = today();
-        return (day, dailyReward(day), minersOnDay[day], nextDayAt(), nextHalvingDay(), totalSupply(), totalMiners, totalMines);
+        reward = dailyReward(day);
+        minersToday = minersOnDay[day];
+        powerToday = powerOnDay[day];
+        closesAt = nextDayAt();
+        halvingDay = nextHalvingDay();
+        supply = totalSupply();
+        allMiners = totalMiners;
+        allMines = totalMines;
     }
 
     /// @notice Everything the website shows about one wallet, in one call.
+    ///         `power` is today's power if the wallet already mined, otherwise
+    ///         the power it would mine with now.
     function minerInfo(address user) external view returns (
         bool minedToday,
         uint256 lastDay,
         bool hasMined,
         uint256 claimableNow,
-        uint256 shareToday
+        uint256 shareToday,
+        uint256 power,
+        uint256 mined
     ) {
         Miner memory m = miners[user];
         minedToday = m.hasMined && m.lastDay == today();
-        return (minedToday, m.lastDay, m.hasMined, claimable(user), minedToday ? shareOf(m.lastDay) : 0);
+        lastDay = m.lastDay;
+        hasMined = m.hasMined;
+        claimableNow = claimable(user);
+        if (minedToday) {
+            shareToday = shareOf(m.lastDay, m.power);
+            power = m.power;
+        } else {
+            power = miningPower(user);
+        }
+        mined = minedBy[user];
     }
 
     // =========================================================

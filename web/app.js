@@ -49,9 +49,9 @@ const ABI = [
   "function claim()",
   "function balanceOf(address) view returns (uint256)",
   "function MAX_SUPPLY() view returns (uint256)",
-  "function info() view returns (uint256 day, uint256 reward, uint256 minersToday, uint256 closesAt, uint256 halvingDay, uint256 supply, uint256 allMiners, uint256 allMines)",
-  "function minerInfo(address) view returns (bool minedToday, uint256 lastDay, bool hasMined, uint256 claimableNow, uint256 shareToday)",
-  "event Mined(address indexed miner, uint256 indexed day)",
+  "function info() view returns (uint256 day, uint256 reward, uint256 minersToday, uint256 powerToday, uint256 closesAt, uint256 halvingDay, uint256 supply, uint256 allMiners, uint256 allMines)",
+  "function minerInfo(address) view returns (bool minedToday, uint256 lastDay, bool hasMined, uint256 claimableNow, uint256 shareToday, uint256 power, uint256 mined)",
+  "event Mined(address indexed miner, uint256 indexed day, uint256 power)",
   "event Claimed(address indexed miner, uint256 indexed day, uint256 amount)",
 ];
 
@@ -86,6 +86,8 @@ const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // When the current day closes (00:00 UTC). Uses the contract once it's live.
 const closesAt = () => chain?.closesAt || (Math.floor(now() / 86400) + 1) * 86400;
+// Mining power comes in hundredths from the contract: 736 → "7.4x"
+const fmtPower = (p) => (p / 100).toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "x";
 const localTime = (ts) => new Date(ts * 1000).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
 
 function timeAgo(sec) {
@@ -343,12 +345,16 @@ function eachStat(name, fn) {
   document.querySelectorAll(`[data-stat="${name}"]`).forEach(fn);
 }
 
-// What one share of today is worth: yours if you mined, or what you'd get by joining now
+// Your slice of today, given your mining power: what you have if you mined,
+// or what you'd get by joining now. It shrinks as more people join.
 function shareEstimate() {
-  if (!chain) return 0;
-  const n = chain.minersToday + (me?.minedToday ? 0 : 1);
-  return chain.reward / Math.max(1, n);
+  if (!chain || !me) return 0;
+  const total = chain.powerToday + (me.minedToday ? 0 : me.power);
+  return total ? (chain.reward * me.power) / total : 0;
 }
+
+// What an average miner gets today
+const averageShare = () => (chain ? chain.reward / Math.max(1, chain.minersToday) : 0);
 
 function renderStats(animate = true) {
   const max = chain?.max ?? SCHEDULE.MAX_SUPPLY;
@@ -370,7 +376,7 @@ function renderStats(animate = true) {
   eachStat("mines", (el) => showNum(el, chain.allMines, 0, "", animate));
   eachStat("today", (el) => showNum(el, chain.minersToday, 0, "", animate));
   eachStat("day", (el) => showNum(el, chain.day, 0, "", false));
-  eachStat("share", (el) => showNum(el, shareEstimate(), 0, "", animate));
+  eachStat("share", (el) => showNum(el, averageShare(), 0, "", animate));
   eachStat("halving", (el) => showNum(el, chain.halvingDay - chain.day, 0, "", false));
   eachStat("nextdaily", (el) => showNum(el, chain.reward / 2, 2, "", false));
   document.querySelectorAll("[data-progress]").forEach((el) => (el.style.width = Math.max(pct, 0.5) + "%"));
@@ -384,6 +390,7 @@ async function refreshStats() {
       day: Number(i.day),
       reward: units(i.reward),
       minersToday: Number(i.minersToday),
+      powerToday: Number(i.powerToday),
       closesAt: Number(i.closesAt),
       halvingDay: Number(i.halvingDay),
       supply: units(i.supply),
@@ -411,6 +418,8 @@ async function refreshUser() {
       hasMined: m.hasMined,
       claimable: units(m.claimableNow),
       shareToday: units(m.shareToday),
+      power: Number(m.power),
+      mined: units(m.mined),
     };
     renderWallet(true);
     renderStats(false);
@@ -425,11 +434,12 @@ async function refreshUser() {
 function userStatus() {
   if (!me || busy) return;
   if (chain && chain.reward === 0) return setStatus("st.ended");
+  const power = () => `<strong>${fmtPower(me.power)}</strong>`;
   if (me.minedToday) {
-    return setStatus("st.joined", { share: () => fmt(shareEstimate()), time: () => localTime(closesAt()) }, "ok");
+    return setStatus("st.joined", { power, share: () => fmt(shareEstimate()), time: () => localTime(closesAt()) }, "ok");
   }
   if (me.claimable > 0) return setStatus("st.claimHint", { amount: () => fmt(me.claimable), day: me.lastDay });
-  setStatus("st.ready");
+  setStatus("st.ready", { power });
 }
 
 function renderWallet(animate = true) {
@@ -437,6 +447,11 @@ function renderWallet(animate = true) {
   setText("lastMined", !account ? "—" : me?.hasMined ? dayName(me.lastDay) : T("never"));
   setText("claimableText", me ? `${fmt(me.claimable)} ${CONFIG.SYMBOL}` : "—");
   setText("shareText", me?.minedToday ? `~${fmt(shareEstimate())} ${CONFIG.SYMBOL}` : "—");
+  document.querySelectorAll("[data-power]").forEach((el) => {
+    el.textContent = me ? fmtPower(me.power) : "—";
+    // 0 at 1x, 1 at 10x: drives the little power bar
+    el.closest("[data-power-box]")?.style.setProperty("--power", me ? String((me.power - 100) / 900) : "0");
+  });
 
   const claim = $("claimBtn");
   if (claim) {
@@ -459,7 +474,7 @@ function renderFeed(animateNew = false) {
     const you = account && it.who.toLowerCase() === account.toLowerCase();
     const isNew = animateNew && (first || !feedSeen.has(it.key));
     const cls = [you && "is-you", isNew && "is-new", it.kind === "Mined" && "is-mine"].filter(Boolean).join(" ");
-    const what = it.kind === "Claimed" ? `+${fmt(it.amount)} ${CONFIG.SYMBOL}` : T("feed.mined", { day: it.day });
+    const what = it.kind === "Claimed" ? `+${fmt(it.amount)} ${CONFIG.SYMBOL}` : T("feed.mined", { power: fmtPower(it.power) });
     return `<li${cls ? ` class="${cls}"` : ""} style="--i:${i}">
       <a href="${link("tx/" + it.hash)}" target="_blank" rel="noopener">
         <span class="feed-dot" aria-hidden="true"></span>
@@ -506,6 +521,7 @@ async function refreshFeed() {
         who: e.args.miner,
         day: Number(e.args.day),
         amount: e.eventName === "Claimed" ? units(e.args.amount) : 0,
+        power: e.eventName === "Mined" ? Number(e.args.power) : 0,
         hash: e.transactionHash,
         time: time[e.blockNumber] || 0,
       })),

@@ -1,6 +1,6 @@
 # Nova (NOVA): the coin you mine in one click
 
-An educational project: an ERC-20 token on the **Base** network that anyone can mine for free from a website, **once a day**. Every day the contract releases **50,000 NOVA** and splits them equally among everyone who mined that day. The daily amount **halves every 210 days**, like Bitcoin, so the supply approaches **21,000,000 NOVA** and never passes it.
+An educational project: an ERC-20 token on the **Base** network that anyone can mine for free from a website, **once a day**. Every day the contract releases **50,000 NOVA** and splits them among everyone who mined that day, weighted by their **mining power** (1x to 10x, higher for people who hold the NOVA they mined). The daily amount **halves every 210 days**, like Bitcoin, so the supply approaches **21,000,000 NOVA** and never passes it.
 
 ```
 nova/
@@ -38,7 +38,7 @@ nova/
 - **Three languages:** English, Spanish and French, from the menu in the header. The choice is remembered, the browser's language is used the first time, and `?lang=es` / `?lang=fr` in the URL works too. Every text, including the live messages, countdown, errors and number formats, is translated.
 - **A coin you can play with:** it leans towards the mouse, you can drag it to spin it (it keeps the speed of your throw), and clicking or tapping it flips it.
 - **More motion:** sections rise in as you scroll, divider lines draw themselves, numbers count up, buttons are slightly magnetic, a progress bar tracks the scroll, and dark cards light up under the mouse.
-- **A dedicated miner page** (`mine.html`): a large 3D coin inside a ring that fills up as the day goes by, a "Today" panel (reward to share, miners so far, what each one gets, countdown to 00:00 UTC, next halving), your balance and share, a Claim button, supply stats and a feed of recent activity read from the contract's `Mined` and `Claimed` events.
+- **A dedicated miner page** (`mine.html`): a large 3D coin inside a ring that fills up as the day goes by, your mining power, a "Today" panel (reward to share, miners so far, the average share, countdown to 00:00 UTC, next halving), your balance and share, a Claim button, supply stats and a feed of recent activity read from the contract's `Mined` and `Claimed` events.
 - If the system has **"reduce motion"** turned on, or the libraries fail to load, the site stays static (a fixed coin in each section) and everything keeps working.
 
 Libraries (loaded from a CDN, pinned to exact versions, nothing to install): ethers.js 6.13.4, GSAP 3.12.5 + ScrollTrigger, and Lenis 1.1.13.
@@ -59,7 +59,8 @@ The coin artwork lives in `coin.svg` and `icon.svg`. If you edit them, re-export
 | Rule | Value |
 |---|---|
 | Maximum supply | 21,000,000 NOVA (hard cap) |
-| Released per day | 50,000 NOVA, split equally among that day's miners |
+| Released per day | 50,000 NOVA, split among that day's miners by mining power |
+| Mining power | 1x with no NOVA, up to 10x; grows with the square root of the NOVA you mined and still hold; 10x at 2 days of reward (100,000 NOVA in era 1) |
 | Halving | the daily amount halves every 210 days |
 | Mines per wallet | once per UTC day (00:00 to 24:00 UTC) |
 | When you get your share | when the day closes: paid on your next mine, or with `claim()` |
@@ -71,8 +72,9 @@ Main functions:
 - `mine()`: join today's mining (also pays your share of the last day you mined)
 - `claim()`: collect your share of the last day you mined, without mining again
 - `info()`: today's numbers in one call (day, reward, miners today, when the day closes, next halving, supply, totals)
-- `minerInfo(wallet)`: a wallet's numbers in one call (mined today?, last day, what it can claim, its share today)
-- `dailyReward(day)`, `shareOf(day)`, `claimable(wallet)`, `today()`: the schedule, step by step
+- `minerInfo(wallet)`: a wallet's numbers in one call (mined today?, last day, what it can claim, its share today, its power, NOVA it has mined)
+- `miningPower(wallet)`: the power a wallet would mine with right now (100 = 1x, 1000 = 10x)
+- `dailyReward(day)`, `shareOf(day, power)`, `claimable(wallet)`, `today()`: the schedule, step by step
 - `logoURI()` / `setLogoURI(url)`: the logo link; only the creator can change it, nothing else
 
 ### Test the contract

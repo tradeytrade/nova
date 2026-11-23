@@ -574,3 +574,19 @@ html.coin-dragging, html.coin-dragging * { cursor: grabbing !important; user-sel
 .claim-link:disabled { opacity: .5; cursor: wait; }
 .feed .is-mine .feed-amt { color: var(--mist); font-weight: 500; font-size: .92rem; }
 .feed .is-mine .feed-dot { background: rgba(241,242,238,.35); }
+
+/* Mining power meter (1x → 10x), under the balance */
+.power {
+  --power: 0;
+  display: flex; align-items: center; gap: 12px;
+  max-width: 320px; margin: -10px auto 22px; font-size: .9rem; color: var(--mist);
+}
+.power-label { white-space: nowrap; }
+.power-bar { flex: 1; height: 6px; border-radius: 999px; background: rgba(241,242,238,.12); overflow: hidden; }
+.power-bar span {
+  display: block; height: 100%; border-radius: inherit; background: var(--lime);
+  width: calc(6% + var(--power) * 94%); transition: width 1.2s cubic-bezier(.2,.8,.2,1);
+}
+.power-value { color: var(--stone); font-weight: 800; font-variant-numeric: tabular-nums; min-width: 3.2em; text-align: right; }
+.mine-status strong { color: inherit; }
+@media (prefers-reduced-motion: reduce) { .power-bar span { transition: none; } }
