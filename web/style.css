@@ -273,7 +273,7 @@ html.motion .rules-list li.in::before, html.motion .steps li.in::before { transf
 .faq-list summary::-webkit-details-marker { display: none; }
 .faq-list summary::after { content: "+"; flex-shrink: 0; font-weight: 400; font-size: 1.6rem; line-height: 1; transition: transform .25s; }
 .faq-list details[open] summary::after { transform: rotate(45deg); }
-.faq-list details p { color: var(--lichen); padding: 0 0 26px; max-width: 62ch; }
+.faq-list details p { color: var(--lichen); padding: 0 0 26px; max-width: 62ch; overflow-wrap: anywhere; }
 .faq-list details[open] p { animation: faq-in .5s cubic-bezier(.2,.8,.2,1); }
 .faq-list summary { transition: color .2s; }
 .faq-list summary:hover { color: var(--moss); }

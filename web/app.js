@@ -547,58 +547,90 @@ function renderFeed(animateNew = false) {
   if (animateNew) feedSeen = new Set(feedState.items.map((it) => it.key));
 }
 
-// Contract connected to the events endpoint (see logsRpc in NETWORKS)
-let _logs = null;
-function logsContract() {
-  if (!_logs) {
-    _logs = net.logsRpc
-      ? new ethers.Contract(CONTRACT, ABI, new ethers.JsonRpcProvider(net.logsRpc, net.chainId, { staticNetwork: true }))
-      : readContract;
+// Base makes a block every 0.2 s, so "recent" means a lot of blocks.
+// The first load looks back up to LOG_CHUNKS × LOG_CHUNK blocks (~11 h);
+// later refreshes only read the blocks added since the last one.
+const LOG_CHUNK = 50000;
+const LOG_CHUNKS = 4;
+let feedEvents = [];  // events found so far, newest first
+let feedScanned = 0;  // last block already read
+const blockTimes = {};
+
+// Provider for events (see logsRpc in NETWORKS): Base's own endpoint only allows tiny ranges
+let _logsProvider = null;
+const logsProvider = () =>
+  (_logsProvider ||= net.logsRpc ? new ethers.JsonRpcProvider(net.logsRpc, net.chainId, { staticNetwork: true }) : readContract.runner);
+
+// Mined and Claimed events between two blocks, in one request
+async function fetchEvents(provider, from, to) {
+  const iface = readContract.interface;
+  const topics = [[iface.getEvent("Mined").topicHash, iface.getEvent("Claimed").topicHash]];
+  const logs = await provider.getLogs({ address: CONTRACT, topics, fromBlock: from, toBlock: to });
+  return logs.map((log) => {
+    const ev = iface.parseLog(log);
+    return { name: ev.name, args: ev.args, blockNumber: log.blockNumber, index: log.index, hash: log.transactionHash };
+  });
+}
+
+async function scanEvents(provider) {
+  const latest = await provider.getBlockNumber();
+  const found = [];
+  if (feedScanned) {
+    // Only what's new since the last refresh
+    const from = Math.max(feedScanned + 1, latest - LOG_CHUNK + 1);
+    if (from <= latest) found.push(...(await fetchEvents(provider, from, latest)));
+  } else {
+    // First load: walk back in chunks until there is enough to show
+    let to = latest;
+    for (let i = 0; i < LOG_CHUNKS && to > 0; i++) {
+      const from = Math.max(0, to - LOG_CHUNK + 1);
+      found.push(...(await fetchEvents(provider, from, to)));
+      if (found.length >= 12) break;
+      to = from - 1;
+    }
   }
-  return _logs;
+  return { latest, found };
 }
 
 async function refreshFeed() {
   if (!$("feed") || !readContract) return;
   try {
-    const provider = readContract.runner;
-    const latest = await provider.getBlockNumber();
-    let events = null;
-    // Public RPCs limit how many blocks one query can cover: try the events
-    // endpoint with a wide range first (~5 h of Base blocks), then smaller ones
-    const tries = [[logsContract(), 9000], [logsContract(), 2000], [readContract, 100]];
-    for (const [c, range] of tries) {
-      try {
-        const from = Math.max(0, latest - range);
-        const [mined, claimed] = await Promise.all([
-          c.queryFilter(c.filters.Mined(), from, latest),
-          c.queryFilter(c.filters.Claimed(), from, latest),
-        ]);
-        events = [...mined, ...claimed];
-        break;
-      } catch (_) { /* try the next option */ }
+    let provider = logsProvider();
+    let scan;
+    try {
+      scan = await scanEvents(provider);
+    } catch (_) {
+      // The events endpoint failed: show at least the last ~20 s from the main one
+      provider = readContract.runner;
+      const latest = await provider.getBlockNumber();
+      scan = { latest, found: await fetchEvents(provider, Math.max(0, latest - 99), latest) };
     }
-    if (!events) throw new Error("no endpoint returned events");
-    const recent = events
-      .filter((e) => e.eventName === "Mined" || e.args.amount > 0n)
+    feedScanned = scan.latest;
+
+    const seen = new Set(feedEvents.map((e) => `${e.hash}:${e.index}`));
+    feedEvents = [...scan.found.filter((e) => !seen.has(`${e.hash}:${e.index}`)), ...feedEvents]
+      .filter((e) => e.name === "Mined" || e.args.amount > 0n)
       .sort((a, b) => b.blockNumber - a.blockNumber || b.index - a.index)
-      .slice(0, 6);
+      .slice(0, 30);
+
+    const recent = feedEvents.slice(0, 6);
     if (!recent.length) {
       feedState = { empty: "feed.none" };
       return renderFeed();
     }
-    const blocks = await Promise.all([...new Set(recent.map((e) => e.blockNumber))].map((n) => provider.getBlock(n)));
-    const time = Object.fromEntries(blocks.filter(Boolean).map((b) => [b.number, b.timestamp]));
+    const missing = [...new Set(recent.map((e) => e.blockNumber))].filter((n) => !blockTimes[n]);
+    const blocks = await Promise.all(missing.map((n) => provider.getBlock(n).catch(() => null)));
+    blocks.filter(Boolean).forEach((b) => (blockTimes[b.number] = b.timestamp));
     feedState = {
       items: recent.map((e) => ({
-        kind: e.eventName,
-        key: `${e.transactionHash}:${e.index}`,
+        kind: e.name,
+        key: `${e.hash}:${e.index}`,
         who: e.args.miner,
         day: Number(e.args.day),
-        amount: e.eventName === "Claimed" ? units(e.args.amount) : 0,
-        power: e.eventName === "Mined" ? Number(e.args.power) : 0,
-        hash: e.transactionHash,
-        time: time[e.blockNumber] || 0,
+        amount: e.name === "Claimed" ? units(e.args.amount) : 0,
+        power: e.name === "Mined" ? Number(e.args.power) : 0,
+        hash: e.hash,
+        time: blockTimes[e.blockNumber] || 0,
       })),
     };
     renderFeed(true);

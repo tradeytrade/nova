@@ -2,6 +2,9 @@
 <html lang="en" data-i18n-title="meta.title">
 <head>
   <meta charset="UTF-8" />
+  <!-- Security: the page may only run its own scripts and the exact libraries below,
+       and may only talk to the Base network endpoints. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://mainnet.base.org https://sepolia.base.org https://base-rpc.publicnode.com https://base-sepolia-rpc.publicnode.com http://127.0.0.1:8545; object-src 'none'; base-uri 'self'; form-action 'none'" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nova · The coin you mine in one click</title>
   <meta name="description" data-i18n-content="meta.desc" content="Nova is a coin on the Base network you mine for free from the web, once a day. 50,000 NOVA are shared among each day’s miners, halving every 210 days." />
@@ -275,6 +278,10 @@
             <p data-i18n="faq.a8">It decides how big your slice of the day is. A wallet with no NOVA mines at 1x. Power grows with the NOVA you mined yourself and still hold, up to 5x when you hold two days’ worth of the daily reward (100,000 NOVA in the first 210 days). It grows fastest at the start: 1,000 NOVA gives 1.4x, 10,000 gives 2.3x and 25,000 gives 3.0x. NOVA you buy or receive from someone else doesn’t count, and if you sell or send yours away, your power goes down.</p>
           </details>
           <details>
+            <summary data-i18n="faq.q9">Is Nova safe? Can someone hack the coin?</summary>
+            <p data-i18n="faq.a9">The rules live in the contract on Base, not on this website, and nobody can change them: there is no admin mint, no upgrade and no pause, and the code is public. Nova only ever asks MetaMask to sign two things: Mine and Claim. It will never ask you to approve spending your tokens or for your secret recovery phrase. The only official contract is 0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B: if another site uses a different one, it is a copy.</p>
+          </details>
+          <details>
             <summary data-i18n="faq.q5">Why Base?</summary>
             <p data-i18n="faq.a5">Base is a layer-2 network built on Ethereum. It inherits Ethereum’s security, but fees are much lower, so one transaction a day makes sense.</p>
           </details>
@@ -310,10 +317,10 @@
   <div id="toast" class="toast" role="status"></div>
 
   <script src="i18n.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js" integrity="sha384-6Zl0Pc8zjSz8KvmNeXRvUQgY4ryFb+BwDvKCmLYcBME0joAaru491tQgi9B7zsMM" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" integrity="sha384-B2WBjDzEjJpYvhmi2UyEn7rektqkf5suS6sNoyyrf0EBAwBHdkiXxIlU0V5Ru2ed" crossorigin="anonymous"></script>
   <script src="app.js"></script>
   <script src="motion.js"></script>
   <script src="fx.js"></script>
