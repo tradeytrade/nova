@@ -21,6 +21,11 @@ const CONFIG = {
 
   // Logo sent to MetaMask when the user clicks "Add to MetaMask"
   LOGO: "logo.png",
+
+  // Where people can trade NOVA. Shows "Trade NOVA" buttons once filled in.
+  // Fill it in only AFTER a NOVA pool exists, e.g. on Uniswap:
+  //   https://app.uniswap.org/swap?chain=base&outputCurrency=<CONTRACT_ADDRESS>
+  TRADE_URL: "",
 };
 
 // The contract's fixed rules (contracts/Nova.sol). Shown before the contract is live.
@@ -169,10 +174,20 @@ function setupTestnet() {
   renderTestnetLink();
 }
 
+// "Trade NOVA" buttons: only on the real network, and only once TRADE_URL is set
+function setupTrade() {
+  const show = !testnet && /^https:\/\//.test(CONFIG.TRADE_URL);
+  document.querySelectorAll("[data-trade-link]").forEach((a) => {
+    a.classList.toggle("hidden", !show);
+    if (show) a.href = CONFIG.TRADE_URL;
+  });
+}
+
 function init() {
   if (window.I18N) Object.assign(I18N.vars, { name: CONFIG.NAME, symbol: CONFIG.SYMBOL, network: net.name });
   fillNames();
   setupTestnet();
+  setupTrade();
 
   const contractUrl = configured ? link(`address/${CONTRACT}`) : "#";
   document.querySelectorAll("[data-contract-link]").forEach((a) => (a.href = contractUrl));

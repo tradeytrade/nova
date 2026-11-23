@@ -1,6 +1,6 @@
 # Nova (NOVA): the coin you mine in one click
 
-An educational project: an ERC-20 token on the **Base** network that anyone can mine for free from a website, **once a day**. Every day the contract releases **50,000 NOVA** and splits them among everyone who mined that day, weighted by their **mining power** (1x to 5x, higher for people who hold the NOVA they mined). The daily amount **halves every 210 days**, like Bitcoin, so the supply approaches **21,000,000 NOVA** and never passes it.
+A community-mined ERC-20 token on the **Base** network that anyone can mine for free from a website, **once a day**. Every day the contract releases **50,000 NOVA** and splits them among everyone who mined that day, weighted by their **mining power** (1x to 5x, higher for people who hold the NOVA they mined). The daily amount **halves every 210 days**, like Bitcoin, so the supply approaches **21,000,000 NOVA** and never passes it.
 
 ```
 nova/
@@ -176,7 +176,7 @@ ERC-20 has no image field, so the site uses `wallet_watchAsset` (EIP-747). When 
 | Domain (optional) | ~$10/year |
 
 ## Disclaimer
-Educational project. NOVA has no monetary value, is not sold and has no liquidity. If it were sold to third parties it would fall under the EU crypto-asset regulation (MiCA).
+NOVA is a standard ERC-20 token and can be traded wherever someone creates a pool for it (see [LAUNCH.md](LAUNCH.md), "Trading and liquidity"). Its price can go to zero; nothing in this project is financial advice. Making a token tradable can bring legal obligations (in the EU, the MiCA regulation): check them before promoting it.
 
 ## License
 [MIT](LICENSE)

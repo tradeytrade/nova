@@ -98,13 +98,30 @@ npm test
 - **Explain "you get it tomorrow".** The site says it, but say it out loud too: today you join, tomorrow you collect.
 - **Show the miner page live.** "Today", the countdown to the end of the day and the activity list are the best part of the demo.
 
-## 4. What not to do
+## 4. Trading and liquidity
 
-- **Don't add a liquidity pool** (Uniswap/Aerodrome) or sell NOVA. That makes it a tradable crypto-asset and brings MiCA obligations and scam perception. The site says "no monetary value", so keep it that way.
-- **Don't promise future value**, airdrops or "early miner rewards".
+NOVA is a normal ERC-20 token, so anyone can create a trading pool for it. The site already says it can be traded and shows **"Trade NOVA"** buttons as soon as `TRADE_URL` in `web/app.js` is filled in.
+
+**Creating a pool** is done by you, from your own wallet, in the exchange's app (for example Uniswap on Base: *Pool → New position → ETH + NOVA*). You need both ETH and NOVA, and NOVA only exists once mined, so mine first and wait for your share. Then set:
+
+```js
+TRADE_URL: "https://app.uniswap.org/swap?chain=base&outputCurrency=<CONTRACT_ADDRESS>",
+```
+
+**How a small pool behaves** (mechanics, not advice):
+- Mining creates up to 50,000 NOVA a day for free. Anyone holding mined NOVA can sell it into the pool, so a small pool's ETH can be taken quickly and the price can fall close to zero.
+- Bought NOVA doesn't raise mining power (only NOVA a wallet mined itself counts), so buying can't be used to take a bigger share of the mining.
+- Liquidity you add can be lost to price movements ("impermanent loss").
+
+**Legal:** in the EU, offering or promoting a tradable crypto-asset can fall under the MiCA regulation. Check what applies to you before advertising NOVA as something to buy.
+
+## 5. What not to do
+
+- **Don't promise future value**, price targets, airdrops or "early miner rewards". The site deliberately says the price can go to zero.
+- **Don't reuse the deployer wallet for trading.** Keep the creator wallet for the logo only.
 - **Don't reuse the deployer wallet** for anything else.
 
-## 5. Nice-to-haves after launch
+## 6. Nice-to-haves after launch
 
 - An Open Graph share image (1200×630) so links look good in chats.
 - A Base Sepolia / Base toggle so visitors can practise for free first.

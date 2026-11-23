@@ -28,8 +28,18 @@ module.exports = {
   // For Basescan, add BASESCAN_API_KEY to .env (free at etherscan.io).
   sourcify: { enabled: true },
   etherscan: {
-    apiKey: { baseSepolia: process.env.BASESCAN_API_KEY || "blockscout" },
+    apiKey: {
+      baseSepolia: process.env.BASESCAN_API_KEY || "blockscout",
+      base: process.env.BASESCAN_API_KEY || "blockscout",
+    },
     customChains: [
+      {
+        network: "base",
+        chainId: 8453,
+        urls: process.env.BASESCAN_API_KEY
+          ? { apiURL: "https://api.basescan.org/api", browserURL: "https://basescan.org" }
+          : { apiURL: "https://base.blockscout.com/api", browserURL: "https://base.blockscout.com" },
+      },
       {
         network: "baseSepolia",
         chainId: 84532,
