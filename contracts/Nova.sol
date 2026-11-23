@@ -11,8 +11,8 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 ///  - Every wallet can mine once per day. When the day closes, that day's
 ///    reward is split among everyone who mined it, according to their
 ///    MINING POWER. There is no race: mining at 00:01 or at 23:59 is the same.
-///  - Mining power goes from 1x (no NOVA) to 10x. It grows with the NOVA you
-///    mined yourself and still hold, and reaches 10x when you hold two days'
+///  - Mining power goes from 1x (no NOVA) to 5x. It grows with the NOVA you
+///    mined yourself and still hold, and reaches 5x when you hold two days'
 ///    worth of the daily reward (100,000 NOVA at the start). It follows a
 ///    square root, so the first coins help the most.
 ///    Only coins you mined count: NOVA sent to you by others doesn't raise
@@ -32,9 +32,9 @@ contract Nova is ERC20 {
     uint256 public constant HALVING_DAYS  = 210;                   // reward halves every 210 days
     uint256 public constant DAY           = 1 days;                // days start at 00:00 UTC
 
-    // Mining power, in hundredths: 100 = 1x, 1000 = 10x
+    // Mining power, in hundredths: 100 = 1x, 500 = 5x
     uint256 public constant MIN_POWER       = 100;  // a wallet with no NOVA
-    uint256 public constant MAX_POWER       = 1000; // the cap
+    uint256 public constant MAX_POWER       = 500;  // the cap (5x)
     uint256 public constant FULL_POWER_DAYS = 2;    // hold 2 days of reward to reach the cap
 
     // ---------- Project data ----------
@@ -120,7 +120,7 @@ contract Nova is ERC20 {
     //  Mining power
     // =========================================================
 
-    /// @notice The power `user` would mine with right now (100 = 1x, 1000 = 10x).
+    /// @notice The power `user` would mine with right now (100 = 1x, 500 = 5x).
     ///         Counts only the NOVA they mined themselves and still hold.
     function miningPower(address user) public view returns (uint256) {
         uint256 held = Math.min(balanceOf(user), minedBy[user]);

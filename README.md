@@ -1,6 +1,6 @@
 # Nova (NOVA): the coin you mine in one click
 
-An educational project: an ERC-20 token on the **Base** network that anyone can mine for free from a website, **once a day**. Every day the contract releases **50,000 NOVA** and splits them among everyone who mined that day, weighted by their **mining power** (1x to 10x, higher for people who hold the NOVA they mined). The daily amount **halves every 210 days**, like Bitcoin, so the supply approaches **21,000,000 NOVA** and never passes it.
+An educational project: an ERC-20 token on the **Base** network that anyone can mine for free from a website, **once a day**. Every day the contract releases **50,000 NOVA** and splits them among everyone who mined that day, weighted by their **mining power** (1x to 5x, higher for people who hold the NOVA they mined). The daily amount **halves every 210 days**, like Bitcoin, so the supply approaches **21,000,000 NOVA** and never passes it.
 
 ```
 nova/
@@ -60,7 +60,7 @@ The coin artwork lives in `coin.svg` and `icon.svg`. If you edit them, re-export
 |---|---|
 | Maximum supply | 21,000,000 NOVA (hard cap) |
 | Released per day | 50,000 NOVA, split among that day's miners by mining power |
-| Mining power | 1x with no NOVA, up to 10x; grows with the square root of the NOVA you mined and still hold; 10x at 2 days of reward (100,000 NOVA in era 1) |
+| Mining power | 1x with no NOVA, up to 5x; grows with the square root of the NOVA you mined and still hold; 5x at 2 days of reward (100,000 NOVA in era 1) |
 | Halving | the daily amount halves every 210 days |
 | Mines per wallet | once per UTC day (00:00 to 24:00 UTC) |
 | When you get your share | when the day closes: paid on your next mine, or with `claim()` |
@@ -73,7 +73,7 @@ Main functions:
 - `claim()`: collect your share of the last day you mined, without mining again
 - `info()`: today's numbers in one call (day, reward, miners today, when the day closes, next halving, supply, totals)
 - `minerInfo(wallet)`: a wallet's numbers in one call (mined today?, last day, what it can claim, its share today, its power, NOVA it has mined)
-- `miningPower(wallet)`: the power a wallet would mine with right now (100 = 1x, 1000 = 10x)
+- `miningPower(wallet)`: the power a wallet would mine with right now (100 = 1x, 500 = 5x)
 - `dailyReward(day)`, `shareOf(day, power)`, `claimable(wallet)`, `today()`: the schedule, step by step
 - `logoURI()` / `setLogoURI(url)`: the logo link; only the creator can change it, nothing else
 

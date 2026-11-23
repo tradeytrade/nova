@@ -86,7 +86,7 @@ const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // When the current day closes (00:00 UTC). Uses the contract once it's live.
 const closesAt = () => chain?.closesAt || (Math.floor(now() / 86400) + 1) * 86400;
-// Mining power comes in hundredths from the contract: 736 → "7.4x"
+// Mining power comes in hundredths from the contract: 382 → "3.8x"
 const fmtPower = (p) => (p / 100).toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "x";
 const localTime = (ts) => new Date(ts * 1000).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
 
@@ -449,8 +449,8 @@ function renderWallet(animate = true) {
   setText("shareText", me?.minedToday ? `~${fmt(shareEstimate())} ${CONFIG.SYMBOL}` : "—");
   document.querySelectorAll("[data-power]").forEach((el) => {
     el.textContent = me ? fmtPower(me.power) : "—";
-    // 0 at 1x, 1 at 10x: drives the little power bar
-    el.closest("[data-power-box]")?.style.setProperty("--power", me ? String((me.power - 100) / 900) : "0");
+    // 0 at 1x, 1 at 5x: drives the little power bar
+    el.closest("[data-power-box]")?.style.setProperty("--power", me ? String((me.power - 100) / 400) : "0");
   });
 
   const claim = $("claimBtn");

@@ -28,20 +28,20 @@ Version 2 (`contracts/Nova.sol`) changes **how coins are created**, not just the
 
 ### Mining power: holders mine more (but not too much)
 
-Each wallet mines with a **mining power** between **1x and 10x**, fixed at the moment it mines. A day's reward is split in proportion to power: someone at 10x gets ten times the slice of someone at 1x.
+Each wallet mines with a **mining power** between **1x and 5x**, fixed at the moment it mines. A day's reward is split in proportion to power: someone at 5x gets five times the slice of someone at 1x.
 
 - **No NOVA = 1x.** A brand-new wallet can mine, but only a small slice.
-- **Power grows with the square root of the NOVA you hold**, up to **10x at two days' worth of the daily reward** (100,000 NOVA in era 1, 50,000 in era 2…). The square root makes the first coins count the most, so newcomers leave 1x quickly and big holders hit a ceiling:
+- **Power grows with the square root of the NOVA you hold**, up to **5x at two days' worth of the daily reward** (100,000 NOVA in era 1, 50,000 in era 2…). The square root makes the first coins count the most, so newcomers leave 1x quickly and big holders hit a ceiling:
 
 | NOVA you mined and still hold (era 1) | 0 | 1,000 | 10,000 | 25,000 | 50,000 | 100,000+ |
 |---|---|---|---|---|---|---|
-| Mining power | 1.0x | 1.9x | 3.8x | 5.5x | 7.4x | 10x (cap) |
+| Mining power | 1.0x | 1.4x | 2.3x | 3.0x | 3.8x | 5x (cap) |
 
-- **Only NOVA you mined yourself counts**: the contract uses `min(your balance, NOVA you have mined)`. Coins sent to you don't raise your power, and if you send yours away, your power drops. Without this, one big balance could be passed from wallet to wallet to give all of them 10x.
-- **Why it's not exaggerated:** the cap is 10x, the curve flattens fast, and the target moves with the halvings, so later newcomers can still catch up.
-- **Side effect against bots:** fresh wallets are stuck at 1x, so creating hundreds of empty wallets is worth ten times less than it was.
+- **Only NOVA you mined yourself counts**: the contract uses `min(your balance, NOVA you have mined)`. Coins sent to you don't raise your power, and if you send yours away, your power drops. Without this, one big balance could be passed from wallet to wallet to give all of them 5x.
+- **Why it's not exaggerated:** the cap is 5x, the curve flattens fast, and the target moves with the halvings, so later newcomers can still catch up.
+- **Side effect against bots:** fresh wallets are stuck at 1x, so creating hundreds of empty wallets is worth up to five times less than a regular miner's.
 
-To make it gentler or stronger before deploying, change `MAX_POWER` (1000 = 10x) or `FULL_POWER_DAYS` in `contracts/Nova.sol`.
+To make it gentler or stronger before deploying, change `MAX_POWER` (500 = 5x) or `FULL_POWER_DAYS` in `contracts/Nova.sol`.
 
 ### Why 21 million and 50,000 a day
 
@@ -65,7 +65,7 @@ To make it gentler or stronger before deploying, change `MAX_POWER` (1000 = 10x)
 
 On a public blockchain without identity checks, **no design can stop one person from using many wallets**. In version 2:
 
-- someone with N wallets gets N shares of a day, but new wallets mine at 1x while regular miners reach up to 10x. 1,000 wallets cost roughly $2–10 in gas **every day**, and they still only get a slice of that one day's reward;
+- someone with N wallets gets N shares of a day, but new wallets mine at 1x while regular miners reach up to 5x. 1,000 wallets cost roughly $2–10 in gas **every day**, and they still only get a slice of that one day's reward;
 - they can never take the supply in one go, never take more than one day's reward per day, and never stop real people from getting their share;
 - real people don't have to race: they can mine whenever they want during the day.
 
@@ -73,7 +73,7 @@ If bots become a real problem, the next step is an identity check (Coinbase Veri
 
 ### The contract is tested
 
-`test/Nova.test.js` checks every rule above: no pre-mine, once per wallet per day, the split, mining power (1x, 7.36x at 50,000, the 10x cap, received coins don't count), automatic payout, claim, days with no miners, halving, the 21M cap, the end of mining and the logo permission. Run it with:
+`test/Nova.test.js` checks every rule above: no pre-mine, once per wallet per day, the split, mining power (1x, 3.82x at 50,000, the 5x cap, received coins don't count), automatic payout, claim, days with no miners, halving, the 21M cap, the end of mining and the logo permission. Run it with:
 
 ```bash
 npm install

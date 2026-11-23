@@ -90,25 +90,25 @@ describe("Nova", function () {
     await nextDay();
     await mine(wallets[1]); // gets paid first, then mines holding 50,000
     await mine(wallets[2]); // a newcomer
-    // 50,000 of the 100,000 needed for full power: 1x + 9x * sqrt(0.5) = 7.36x
-    assert.equal((await nova.miners(a)).power, 736n);
+    // 50,000 of the 100,000 needed for full power: 1x + 4x * sqrt(0.5) = 3.82x
+    assert.equal((await nova.miners(a)).power, 382n);
     assert.equal((await nova.miners(b)).power, 100n);
 
     await nextDay();
     await claim(wallets[1]);
     await claim(wallets[2]);
-    assert.equal(await balance(wallets[1]), NOVA(50000) + (NOVA(50000) * 736n) / 836n);
-    assert.equal(await balance(wallets[2]), (NOVA(50000) * 100n) / 836n); // about 5,981
+    assert.equal(await balance(wallets[1]), NOVA(50000) + (NOVA(50000) * 382n) / 482n);
+    assert.equal(await balance(wallets[2]), (NOVA(50000) * 100n) / 482n); // about 5,981
   });
 
-  it("caps mining power at 10x", async () => {
+  it("caps mining power at 5x", async () => {
     const a = await wallets[1].getAddress();
     await mine(wallets[1]);
     await nextDay();
     await mine(wallets[1]);
     await nextDay();
     await mine(wallets[1]); // now holds 100,000 mined NOVA
-    assert.equal((await nova.miners(a)).power, 1000n);
+    assert.equal((await nova.miners(a)).power, 500n);
   });
 
   it("only counts NOVA you mined yourself and still hold", async () => {
@@ -116,7 +116,7 @@ describe("Nova", function () {
     await mine(wallets[1]);
     await nextDay();
     await claim(wallets[1]); // holds 50,000
-    assert.equal(await nova.miningPower(a), 736n);
+    assert.equal(await nova.miningPower(a), 382n);
 
     // Sending it to another wallet doesn't give that wallet power...
     await (await nova.connect(wallets[1]).transfer(c, NOVA(50000))).wait();
