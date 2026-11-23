@@ -90,6 +90,17 @@ The tests (`test/Nova.test.js`) run the contract on a local blockchain and move 
 
 ---
 
+## Live on Base
+
+| | |
+|---|---|
+| Contract | [`0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B`](https://base.blockscout.com/address/0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B) |
+| Source code | verified, exact match, on [Sourcify](https://repo.sourcify.dev/8453/0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B) |
+| Launched | 23 Nov 2026, 18:42 UTC (day 0 ends 24 Nov 00:00 UTC) |
+| Genesis mine | [`0xb8616b4f…`](https://base.blockscout.com/tx/0xb8616b4f3d3a0279f0270c7114354adebb342ff0d33e44681128f67b4aa0f2ee) by the creator, starting from a supply of 0 |
+
+---
+
 ## Public test version (Base Sepolia)
 
 The contract is live on the **Base Sepolia** testnet, where ETH is free:

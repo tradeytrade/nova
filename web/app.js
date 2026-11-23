@@ -9,7 +9,7 @@ const CONFIG = {
   DECIMALS: 18,
 
   // 👇 Paste the address Remix gives you after deploying (starts with 0x...)
-  CONTRACT_ADDRESS: "",
+  CONTRACT_ADDRESS: "0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B",
 
   // "baseSepolia" to test for free, "base" for the real network
   // ("localhost" is only for development with a local node)
@@ -39,7 +39,7 @@ const NETWORKS = {
     // Base's own endpoint only searches ~100 blocks of events at a time,
     // so the activity feed reads events from this free endpoint instead
     logsRpc: "https://base-rpc.publicnode.com",
-    explorer: "https://basescan.org",
+    explorer: "https://base.blockscout.com", // shows the verified source code
   },
   baseSepolia: {
     chainId: 84532,
