@@ -9,6 +9,7 @@
 | Contract (Base) | [`0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B`](https://base.blockscout.com/address/0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B) |
 | Source code | verified on [Sourcify](https://repo.sourcify.dev/8453/0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B) (exact match) |
 | Launched | 23 Nov 2026, with no pre-mine |
+| Trade | [Uniswap v3 NOVA/ETH pool](https://app.uniswap.org/explore/pools/base/0xe7e2712CFa3C39745b6C6a6E8b10c1D70Fb4d14E) (1% fee) · [swap](https://app.uniswap.org/swap?chain=base&inputCurrency=NATIVE&outputCurrency=0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B) |
 | Test version | same address on Base Sepolia, at [`?testnet`](https://tradeytrade.github.io/nova/?testnet) |
 
 ## How it works

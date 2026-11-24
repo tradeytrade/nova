@@ -25,7 +25,7 @@ const CONFIG = {
   // Where people can trade NOVA. Shows "Trade NOVA" buttons once filled in.
   // Fill it in only AFTER a NOVA pool exists, e.g. on Uniswap:
   //   https://app.uniswap.org/swap?chain=base&outputCurrency=<CONTRACT_ADDRESS>
-  TRADE_URL: "",
+  TRADE_URL: "https://app.uniswap.org/swap?chain=base&inputCurrency=NATIVE&outputCurrency=0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B",
 };
 
 // The contract's fixed rules (contracts/Nova.sol). Shown before the contract is live.
