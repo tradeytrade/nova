@@ -26,6 +26,9 @@ const CONFIG = {
   // Fill it in only AFTER a NOVA pool exists, e.g. on Uniswap:
   //   https://app.uniswap.org/swap?chain=base&outputCurrency=<CONTRACT_ADDRESS>
   TRADE_URL: "https://app.uniswap.org/swap?chain=base&inputCurrency=NATIVE&outputCurrency=0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B",
+
+  // The NOVA/ETH pool the live price is read from (Uniswap v3 on Base). Empty = no price shown.
+  POOL_ADDRESS: "0xe7e2712CFa3C39745b6C6a6E8b10c1D70Fb4d14E",
 };
 
 // The contract's fixed rules (contracts/Nova.sol). Shown before the contract is live.
@@ -40,6 +43,7 @@ const NETWORKS = {
     // so the activity feed reads events from this free endpoint instead
     logsRpc: "https://base-rpc.publicnode.com",
     explorer: "https://base.blockscout.com", // shows the verified source code
+    ethUsdFeed: "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70", // Chainlink ETH / USD, for the dollar price
   },
   baseSepolia: {
     chainId: 84532,
@@ -191,6 +195,8 @@ function init() {
 
   const contractUrl = configured ? link(`address/${CONTRACT}`) : "#";
   document.querySelectorAll("[data-contract-link]").forEach((a) => (a.href = contractUrl));
+  setupContractBox();
+  renderPrice(); // hides the price where there is no pool (e.g. the test version)
 
   on("connectBtn", "click", connect);
   on("mineBtn", "click", () => send("mine"));
@@ -226,7 +232,8 @@ function init() {
 
   refreshStats();
   refreshFeed();
-  setInterval(() => { refreshStats(); refreshUser(); }, 15000);
+  refreshPrice();
+  setInterval(() => { refreshStats(); refreshUser(); refreshPrice(); }, 15000);
   setInterval(refreshFeed, 30000);
 
   // If the wallet was already connected before, reconnect without prompting
@@ -243,11 +250,82 @@ function onLanguage() {
   renderTestnetLink();
   renderConnect();
   renderStats(false);
+  renderPrice();
   renderFeed();
   renderWallet(false);
   renderStatus();
   if (busy) setText("mineLabel", T(busyLabel));
   else updateMineButton();
+}
+
+/* ---------- Contract address and live price ---------- */
+// Shows the contract address with a Copy button
+function setupContractBox() {
+  document.querySelectorAll("[data-contract-address]").forEach((el) => {
+    // Full address on wide screens, 0xfCDD…815B on phones (style.css); Copy always copies the full one
+    el.innerHTML = configured ? `<span class="addr-full">${CONTRACT}</span><span class="addr-short">${short(CONTRACT)}</span>` : "—";
+    el.title = CONTRACT;
+  });
+  document.querySelectorAll("[data-copy-contract]").forEach((btn) => {
+    btn.disabled = !configured;
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(CONTRACT);
+      } catch (_) {
+        // Older browsers: select the address so it can be copied by hand
+        const el = btn.parentElement.querySelector("[data-contract-address]");
+        if (el) getSelection().selectAllChildren(el);
+        return;
+      }
+      btn.textContent = T("copied");
+      btn.classList.add("is-copied");
+      setTimeout(() => {
+        btn.textContent = T("copy");
+        btn.classList.remove("is-copied");
+      }, 1600);
+    });
+  });
+}
+
+// Live price, read on-chain: NOVA in ETH from the Uniswap pool, ETH in USD from Chainlink
+let price = null; // { eth, usd }
+let poolToken0 = null;
+const POOL_ABI = [
+  "function slot0() view returns (uint160 sqrtPriceX96, int24 tick, uint16, uint16, uint16, uint8, bool)",
+  "function token0() view returns (address)",
+];
+const FEED_ABI = ["function latestRoundData() view returns (uint80, int256 answer, uint256, uint256, uint80)"];
+
+async function refreshPrice() {
+  if (testnet || !readContract || !isAddress(CONFIG.POOL_ADDRESS)) return;
+  try {
+    const provider = readContract.runner;
+    const pool = new ethers.Contract(CONFIG.POOL_ADDRESS, POOL_ABI, provider);
+    poolToken0 ||= await pool.token0();
+    const [slot0, round] = await Promise.all([
+      pool.slot0(),
+      net.ethUsdFeed ? new ethers.Contract(net.ethUsdFeed, FEED_ABI, provider).latestRoundData() : null,
+    ]);
+    // sqrtPriceX96² is token1 per token0 (both tokens have 18 decimals)
+    const ratio = (Number(slot0.sqrtPriceX96) / 2 ** 96) ** 2;
+    const eth = poolToken0.toLowerCase() === CONTRACT.toLowerCase() ? ratio : 1 / ratio;
+    const ethUsd = round ? Number(round.answer) / 1e8 : 0; // Chainlink USD feeds use 8 decimals
+    price = { eth, usd: eth * ethUsd };
+    renderPrice();
+  } catch (err) {
+    console.error("Error reading the price", err);
+  }
+}
+
+// Small prices keep 3 significant digits: $0.00235
+const fmtSig = (n, opts = {}) => Number(n).toLocaleString(locale(), { maximumSignificantDigits: 3, ...opts });
+
+function renderPrice() {
+  const usd = price?.usd ? fmtSig(price.usd, { style: "currency", currency: "USD" }) : "—";
+  const eth = price ? `${fmtSig(price.eth)} ETH` : "—";
+  document.querySelectorAll('[data-stat="price"]').forEach((el) => (el.textContent = price?.usd ? usd : eth));
+  document.querySelectorAll("[data-price-eth]").forEach((el) => (el.textContent = eth));
+  document.querySelectorAll("[data-price-box]").forEach((el) => el.classList.toggle("hidden", testnet || !isAddress(CONFIG.POOL_ADDRESS)));
 }
 
 /* ---------- Wallet ---------- */

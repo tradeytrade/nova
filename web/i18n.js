@@ -110,6 +110,12 @@
       "footer.note": "A coin mined by its community on {network}.",
       "trade.btn": "Trade NOVA",
       "footer.contract": "Contract on the explorer",
+      "hero.price": "<strong>{price}</strong> per NOVA",
+      "price.title": "NOVA price",
+      "price.source": "Live from the Uniswap pool",
+      "contract.label": "Contract",
+      "copy": "Copy",
+      "copied": "Copied!",
       "footer.back": "← Back to home",
       "footer.testnet": "Test version (Base Sepolia)",
       "footer.mainnet": "Leave the test version",
@@ -282,6 +288,12 @@
       "footer.note": "Una moneda minada por su comunidad en {network}.",
       "trade.btn": "Comprar / vender NOVA",
       "footer.contract": "Contrato en el explorador",
+      "hero.price": "<strong>{price}</strong> por NOVA",
+      "price.title": "Precio de NOVA",
+      "price.source": "En directo desde el pool de Uniswap",
+      "contract.label": "Contrato",
+      "copy": "Copiar",
+      "copied": "¡Copiado!",
       "footer.back": "← Volver al inicio",
       "footer.testnet": "Versión de prueba (Base Sepolia)",
       "footer.mainnet": "Salir de la versión de prueba",
@@ -454,6 +466,12 @@
       "footer.note": `Une pièce minée par sa communauté sur {network}.`,
       "trade.btn": "Acheter / vendre NOVA",
       "footer.contract": "Contrat sur l’explorateur",
+      "hero.price": "<strong>{price}</strong> le NOVA",
+      "price.title": "Prix du NOVA",
+      "price.source": "En direct depuis le pool Uniswap",
+      "contract.label": "Contrat",
+      "copy": "Copier",
+      "copied": `Copié${NB}!`,
       "footer.back": "← Retour à l’accueil",
       "footer.testnet": "Version de test (Base Sepolia)",
       "footer.mainnet": "Quitter la version de test",
@@ -533,7 +551,7 @@
 
   const LOCALES = { en: "en-US", es: "es-ES", fr: "fr-FR" };
   const NAMES = { en: "English", es: "Español", fr: "Français" };
-  const STATS = ["supply", "max", "miners", "mines", "pct", "today", "share", "day", "halving", "nextdaily"];
+  const STATS = ["supply", "max", "miners", "mines", "pct", "today", "share", "day", "halving", "nextdaily", "price"];
   const STORE_KEY = "nova-lang";
 
   function detect() {

@@ -594,3 +594,33 @@ html.coin-dragging, html.coin-dragging * { cursor: grabbing !important; user-sel
 /* Small, discreet link to the public test version (footer) */
 .testnet-link { flex-basis: 100%; font-size: .78rem; color: inherit; opacity: .4; text-decoration: none; transition: opacity .2s; }
 .testnet-link:hover, .testnet-link:focus-visible { opacity: 1; text-decoration: underline; }
+
+/* Contract address with a Copy button, and the live price */
+.contract-box {
+  display: flex; align-items: center; gap: 10px; margin-top: 28px; padding: 10px 10px 10px 16px;
+  border-radius: 14px; box-shadow: inset 0 0 0 1px var(--rule); max-width: 100%;
+}
+.contract-label { font-size: .85rem; color: var(--lichen); white-space: nowrap; }
+.contract-addr {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  background: none; padding: 0; font-size: .88rem; color: var(--ink);
+}
+.copy-btn {
+  flex-shrink: 0; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer;
+  padding: 7px 14px; border: 0; border-radius: 999px; background: var(--ink); color: var(--stone);
+  transition: background-color .2s, color .2s;
+}
+.copy-btn:hover { background: var(--forest); }
+.copy-btn.is-copied { background: var(--lime); color: var(--ink); }
+.copy-btn:disabled { opacity: .4; cursor: default; }
+.page-miner .contract-box { margin-top: 18px; box-shadow: inset 0 0 0 1px var(--rule-dark); }
+.page-miner .contract-label { color: var(--mist); }
+.page-miner .contract-addr { color: var(--stone); }
+.page-miner .copy-btn { background: var(--stone); color: var(--ink); }
+.page-miner .copy-btn:hover { background: #fff; }
+.page-miner .copy-btn.is-copied { background: var(--lime); }
+.panel-price .panel-big { font-size: 1.9rem; }
+/* Grid and flex children may shrink below the long address, so phones don't scroll sideways */
+.mine-copy, .mine-card, .miner-side, .panel, .stage { min-width: 0; }
+.addr-short { display: none; }
+@media (max-width: 520px) { .addr-full { display: none; } .addr-short { display: inline; } }

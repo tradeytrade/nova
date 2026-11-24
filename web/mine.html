@@ -97,6 +97,19 @@
 
     <!-- ===== SIDE PANELS ===== -->
     <aside class="miner-side">
+      <section class="panel panel-price" aria-labelledby="priceTitle">
+        <div class="panel-head" data-price-box>
+          <h2 id="priceTitle" class="panel-title" data-i18n="price.title">NOVA price</h2>
+          <strong class="panel-big" data-stat="price">—</strong>
+        </div>
+        <p class="panel-note" data-price-box><span data-price-eth>—</span> · <span data-i18n="price.source">Live from the Uniswap pool</span></p>
+        <div class="contract-box">
+          <span class="contract-label" data-i18n="contract.label">Contract</span>
+          <code class="contract-addr" data-contract-address>0xfCDD804A78c8C329ae690fC9Dd1Bb897278B815B</code>
+          <button class="copy-btn" type="button" data-copy-contract data-i18n="copy">Copy</button>
+        </div>
+      </section>
+
       <section class="panel panel-today" aria-labelledby="todayTitle">
         <div class="panel-head">
           <h2 id="todayTitle" class="panel-title" data-i18n-html="today.title">Today · day <span data-stat="day">—</span></h2>
