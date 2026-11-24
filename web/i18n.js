@@ -107,7 +107,7 @@
 
       "outro.text": "One click a day. Shared by everyone.",
       "outro.cta": "Open the miner",
-      "footer.note": "A coin mined by its community on {network}. Crypto is risky: NOVA’s price can go to zero.",
+      "footer.note": "A coin mined by its community on {network}.",
       "trade.btn": "Trade NOVA",
       "footer.contract": "Contract on the explorer",
       "footer.back": "← Back to home",
@@ -279,7 +279,7 @@
 
       "outro.text": "Un clic al día. Repartido entre todos.",
       "outro.cta": "Ir a minar",
-      "footer.note": "Una moneda minada por su comunidad en {network}. Las criptomonedas son arriesgadas: el precio de NOVA puede llegar a cero.",
+      "footer.note": "Una moneda minada por su comunidad en {network}.",
       "trade.btn": "Comprar / vender NOVA",
       "footer.contract": "Contrato en el explorador",
       "footer.back": "← Volver al inicio",
@@ -451,7 +451,7 @@
 
       "outro.text": "Un clic par jour. Partagé entre tous.",
       "outro.cta": "Aller miner",
-      "footer.note": `Une pièce minée par sa communauté sur {network}. Les cryptos sont risquées${NB}: le prix de NOVA peut tomber à zéro.`,
+      "footer.note": `Une pièce minée par sa communauté sur {network}.`,
       "trade.btn": "Acheter / vendre NOVA",
       "footer.contract": "Contrat sur l’explorateur",
       "footer.back": "← Retour à l’accueil",
